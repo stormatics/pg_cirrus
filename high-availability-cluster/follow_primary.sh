@@ -1,5 +1,5 @@
 #!/bin/bash
-# follow_primary
+# follow_primary.sh
 # This script is run when failover is completed. This file runs on all standby hosts
 
 set -o xtrace

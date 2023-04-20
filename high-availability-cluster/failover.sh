@@ -1,4 +1,5 @@
 #!/bin/bash
+# failover.sh
 # This script is run by failover_command. This script runs when the primary PostgreSQL node fails and a standby node is promoted as primary node. 
 
 set -o xtrace
