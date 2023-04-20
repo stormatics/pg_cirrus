@@ -214,7 +214,7 @@
         - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ lookup('env', 'PWD') }}/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary command are set
 
 # Configuration for standby2 PostgreSQL server are added to pgpool.con file
-    - name: Insert new entries for standby2 server inside pg_hba.conf file
+    - name: Insert new entries for standby2 server inside pgpool.conf file
       lineinfile:
         path: /etc/pgpool2/pgpool.conf
         line: |
