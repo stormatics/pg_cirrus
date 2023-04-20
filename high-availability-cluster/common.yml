@@ -1,0 +1,24 @@
+---
+# common.yml
+# This file contains common configuration variables used across all files
+
+# PostgreSQL server port number, PostgreSQL default port is 5432
+_PG_PORT: 5432
+
+# PostgreSQL server password
+_PG_PASSWORD: 123
+
+# PostgreSQL server version. 15 tag will always get the latest postgres version to specify a version add version like this _PG_VERSION: 15
+_PG_VERSION: _LATEST_
+
+# Directory where Cirrus configuration files are stored and it will also contain data directories
+_PG_CIRRUS_DIRECTORY: /home/postgres/stromatics/pg_cirrus
+
+# Name of the primary server data directory
+_PG_PRIMARY_DATA_DIRECTORY_NAME: primary_data
+
+# Name of the standby 1 server data directory
+_PG_STANDBY1_DATA_DIRECTORY_NAME: standby1_data
+
+# Name of the standby 2 server data directory
+_PG_STANDBY2_DATA_DIRECTORY_NAME: standby2_data
