@@ -1,5 +1,6 @@
 #!/bin/bash
-# This script is run by failover_command.
+# follow_primary
+# This script is run when failover is completed. This file runs on all standby hosts
 
 set -o xtrace
 
@@ -30,14 +31,16 @@ NEW_MAIN_NODE_PORT="$9"
 NEW_MAIN_NODE_PGDATA="${10}"
 OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
-
+ 
 if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 	echo nothing to do
 	exit 0
 fi
-
+# Creates a new replication slot on new primary
 ssh postgres@$NEW_MAIN_NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_create_physical_replication_slot('sb2');\""
 
+# Updates connection string on all standbys to point to new primary
 ssh postgres@$NODE_HOST "echo 123 |  psql -d postgres -W -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser password=repuserpassword channel_binding=prefer host=$NEW_MAIN_NODE_HOST port=5432 sslmode=prefer sslcompression=0 sslsni=1 ssl_min_protocol_version=TLSv1.2 gssencmode=prefer krbsrvname=postgres target_session_attrs=any';\""
 
+# Reload connection properties
 ssh postgres@$NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_reload_conf();\""
