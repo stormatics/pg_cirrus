@@ -1,0 +1,244 @@
+---
+# setup.yml
+# This is main ansible playbook it is used to configure 3-Node PostgreSQL cluster with a remote primary node, 2 remote standby nodes and a localhost pgpool node. 
+# Access to 3 remote nodes is required and pgpool would be configured on host where we will trigger pg_cirrus.
+
+# If _PG_VERSION == '_LATEST_' then latest PostgreSQL version will be fetched and _PG_VERSION variable inside common.yml will be replaced with latest version.
+- name: Get Latest PostgreSQL Server Version
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - common.yml
+  tasks:
+    # Extract the latest PostgreSQL version using get-latest-server-version.yml file if _PG_VERSION == '_LATEST_' in common.yml.
+    - name: Include tasks if _PG_VERSION is _LATEST_
+      include_tasks: tasks/get-latest-server-version.yml
+      when: _PG_VERSION == "_LATEST_"
+
+    # Value of _PG_VERSION in common.yml is replaced with latest version number if _PG_VERSION== '_LATEST_'.
+    - name: Replace _LATEST_ in common.yml with _PG_VERSION
+      replace:
+        path: common.yml
+        regexp: '_LATEST_'
+        replace: "{{ _PG_VERSION }}"
+
+# Configure the PostgreSQL primary server.
+- name: Configure PostgreSQL primary server
+  hosts: PG_PRIMARY_GROUP
+  become: true
+  tasks:
+    - name: Load common variables
+      include_vars:
+        file: common.yml
+
+    # Create a directory to store configuration files and data directory for Primary PostgreSQL server. It uses the _PG_CIRRUS_DIRECTORY variable to set the directory path.
+    - name: Creating pg_cirrus directory
+      become_user: postgres
+      file:
+        path: "{{ _PG_CIRRUS_DIRECTORY }}"
+        state: directory
+
+    # Check if the required PostgreSQL version is latest or a specific version. 
+    - name: Check if PG_VERSION is Latest
+      set_fact:
+        is_latest: "{{ _PG_VERSION == '_LATEST_' }}"
+
+    # Determine the packge name using is_latest variable. Package is installed using install-community-packages.yml. 
+    - name: "Install PostgreSQL {{ _PG_VERSION }}"
+      vars:
+        _PACKAGE_NAME: "{{ 'postgresql' if is_latest else 'postgresql-' + _PG_VERSION|string }}"
+      include_tasks: tasks/install-community-packages.yml
+
+    # Stop the primary PostgreSQL server if it is already running.
+    - name: Stop already running service
+      shell: service postgresql stop
+
+    # Install the required python3 and psycopg2 packages.
+    - name: Installing python3-psycopg2
+      apt:
+        name:
+          - python3-psycopg2
+        state: present
+
+    # Create a password file for the PostgreSQL server. It uses the _PG_PASSWORD variable in common.yml to set the password.
+    - name: Creating password file
+      become_user: postgres
+      copy:
+        dest: "{{ _PG_CIRRUS_DIRECTORY }}/pfile"
+        content: "{{ _PG_PASSWORD }}"
+
+    # Initialize the data directory for the Primary PostgreSQL server to _PG_CIRRUS_DIRECTORY in common.yml.
+    - name: Initialize the data directory
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/initdb -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }} --pwfile {{ _PG_CIRRUS_DIRECTORY }}/pfile --encoding=utf-8 -A scram-sha-256
+
+    # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module 
+    - name: Update postgresql.conf
+      become_user: postgres
+      replace:
+        path: "{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }}/postgresql.conf"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      with_items:
+        - { regexp: "#listen_addresses = 'localhost'", replace: "listen_addresses = '*'" } # listen_addresses is set to listen on all IP addresses.
+        - { regexp: "#wal_level = replica", replace: "wal_level = replica" } # wal_level is set to replica.
+        - { regexp: "#max_wal_senders = 10", replace: "max_wal_senders = 10" } # max_wal_senders is set to 10.
+        - { regexp: "#wal_keep_size = 0", replace: "wal_keep_size = 1GB" } # wal_keep_size is set to 1GB.
+
+    # Start the Primary PostgreSQL server.
+    - name: Start the server
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/pg_ctl -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }} start
+
+    # Create a replication user for PostgreSQL.
+    - name: Creating a replication user
+      postgresql_query:
+        login_user: postgres
+        login_password: "{{ _PG_PASSWORD }}"
+        query: create user repuser with password 'repuserpassword' replication;
+
+    # Update the pg_hba.conf file for replication access. 
+    # Unrestricted access to the PostgreSQL server from any IP address (0.0.0.0/0) without any password or other authentication is provided.
+    - name: Update pg_hba.conf
+      become_user: postgres
+      lineinfile:
+        path: "{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }}/pg_hba.conf"
+        line: |
+          host    replication             repuser             all            trust
+          host    all             repuser             all            trust
+          host    replication repuser     0.0.0.0/0         trust
+          host    postgres        postgres        0.0.0.0/0               trust
+        insertafter: EOF
+
+    # Restart the primary PostgreSQL server
+    - name: Restart the server
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/pg_ctl -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }} restart
+
+# Configure the PostgreSQL standby servers.
+- name: Setup Stand by servers
+  hosts: PG_SB_GROUP
+  become: true
+  tasks:
+    - name: Load common variables
+      include_vars:
+        file: common.yml
+
+    # Create a directory to store configuration files and data directory for Standby PostgreSQL servers. It uses the _PG_CIRRUS_DIRECTORY variable to set the directory path.
+    - name: Creating pg_cirrus directory
+      become_user: postgres
+      file:
+        path: "{{ _PG_CIRRUS_DIRECTORY }}"
+        state: directory
+
+    # Check if the required PostgreSQL version is latest or a specific version.
+    - name: Check if _PG_VERSION is _LATEST_
+      set_fact:
+        is_latest: "{{ _PG_VERSION == '_LATEST_' }}"
+
+    # Determine the packge name using is_latest variable. Package is installed using install-community-packages.yml.
+    - name: "Install PostgreSQL {{ _PG_VERSION }}"
+      vars:
+        _PACKAGE_NAME: "{{ 'postgresql' if is_latest else 'postgresql-' + _PG_VERSION|string }}"
+      include_tasks: tasks/install-community-packages.yml
+
+    # Stop standby PostgreSQL servers
+    - name: Stop already running service
+      shell: service postgresql stop
+
+    # Run pg_basebackup command to create standby server 1
+    - name: Running pg_basebackup for standby1 server
+      become_user: postgres
+      shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PG_PRIMARY_HOST']['ansible_host'] }} -U repuser -X stream -C -S sb1 -v -R -w -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }}"
+      when: inventory_hostname == 'PG_SB1_HOST'
+
+    # Start the PostgreSQL standby server 1
+    - name: Starting the standby1 server
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/pg_ctl -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }} start
+      when: inventory_hostname == 'PG_SB1_HOST'
+
+    # Run pg_basebackup command to create standby server 2
+    - name: Running pg_basebackup for standby2 server
+      become_user: postgres
+      shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PG_PRIMARY_HOST']['ansible_host'] }} -U repuser -X stream -C -S sb2 -v -R -w -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY2_DATA_DIRECTORY_NAME }}"
+      when: inventory_hostname == 'PG_SB2_HOST'
+
+    # Start the PostgreSQL standby server 2
+    - name: Starting the standby2 server
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/pg_ctl -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY2_DATA_DIRECTORY_NAME }} start
+      when: inventory_hostname == 'PG_SB2_HOST'
+
+# Configure pgpool on local host
+- name: Configure pgpool2
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Load common variables
+      include_vars:
+        file: common.yml
+
+    # Install pgpool2 package using install-community-packages.yml
+    - name: Installing pgpool2
+      vars:
+        _PACKAGE_NAME: pgpool2
+      include_tasks: tasks/install-community-packages.yml
+
+    # Update pgpool configurations in pgpool.conf file using Ansible's replace module
+    - name: Update pgpool.conf file
+      replace:
+        path: /etc/pgpool2/pgpool.conf
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      with_items:
+        - { regexp: "#listen_addresses = 'localhost'", replace: "listen_addresses = '*'" } # Allow connections from any IP address
+        - { regexp: "#port = 5433", replace: "port = 9999" } # Change the default port number for pgpool to 9999
+        - { regexp: "#log_statement = off", replace: "log_statement = on" } # Enable statement logging
+        - { regexp: "#log_per_node_statement = off", replace: "log_per_node_statement = on" } # Enable per-node statement logging
+        - { regexp: "#sr_check_user = 'nobody'", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks
+        - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds
+        - { regexp: "#health_check_user = 'nobody'", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks
+        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "pool_passwd = '/etc/pgpool2/pool_passwd'" } # Set location of pgpool password file
+        - { regexp: "#sr_check_password = ''", replace: "sr_check_password = ''" } # Leave streaming replication password blank
+        - { regexp: "#health_check_password = ''", replace: "health_check_password = ''" } # Leave health check password blank
+        - { regexp: "#backend_hostname0 = 'host1'", replace: "backend_hostname0 = '{{ hostvars['PG_PRIMARY_HOST']['ansible_host'] }}'" } # Set the hostname for the primary PostgreSQL node.
+        - { regexp: "#backend_hostname1 = 'host2'", replace: "backend_hostname1 = '{{ hostvars['PG_SB1_HOST']['ansible_host'] }}'" } # Set the hostname for the standby1 PostgreSQL node.
+        - { regexp: "#backend_port0 = 5432", replace: "backend_port0 = {{ _PG_PORT  }}" } # Sets the port for the primary PostgreSQL node.
+        - { regexp: "#backend_port1 = 5433", replace: "backend_port1 = {{ _PG_PORT}}" } # Set the port for the standby1 PostgreSQL node.
+        - { regexp: "#backend_weight0 = 1", replace: "backend_weight0 = 0" } # Set the weight of the primary PostgreSQL node to 0 for load balancing.
+        - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
+        - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }}'" } # Data directory path for primary PostgreSQL server
+        - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }}'" } #Data directory path for standby1 PostgreSQL server
+        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ lookup('env', 'PWD') }}/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ _PG_VERSION }}'" } # Parameters for failover command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ lookup('env', 'PWD') }}/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary command are set
+
+    # Configuration for standby2 PostgreSQL server are added to pgpool.con file
+    - name: Insert new entries for standby2 server inside pgpool.conf file
+      lineinfile:
+        path: /etc/pgpool2/pgpool.conf
+        line: |
+          backend_hostname2 = '{{ hostvars['PG_SB2_HOST']['ansible_host'] }}' # Set the hostname for the standby2 PostgreSQL node.
+          backend_port2 = {{ _PG_PORT }} # Set the port for standby2 PostgreSQL node.
+          backend_weight2 = 1 # Set the weight of standby2 PostgreSQL node to 1 for loadbalancing.
+          backend_data_directory2 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY2_DATA_DIRECTORY_NAME }}' # Data directory path for standby2 PostgreSQL server.
+        insertafter: EOF
+
+    # Create a pgpool password file in /etc/pgpool2
+    - name: Create a pool_passwd file
+      lineinfile:
+        path: /etc/pgpool2/pool_passwd
+        line: repuser:repuserpassword
+        insertafter: EOF
+
+    # Stop already running pgpool2 service on localhost
+    - name: Stopping the already running pgpool2 service
+      service:
+        name: pgpool2
+        state: stopped
+
+    # Start pgpool2 srevice on localhost
+    - name: Start pgpool2 service
+      service:
+        name: pgpool2
+        state: started
