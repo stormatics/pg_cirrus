@@ -1,3 +1,31 @@
+#highly-available-cluster
+## This directory contains script files to automate setting up 3-Node highly available PostgreSQL cluster.
+# Pre-requisites:
+
+
+## Pgpool Machine
+
+Install OpenSSH Server
+* sudo apt-get install openssh-server -y
+
+Install Net-Tools
+* sudo apt-get install net-tools -y
+
+Install Ansible
+* sudo apt-get install ansible -y
+
+Install Git
+* sudo apt-get install git -y
+
+## Primary, Standby1 and Standby2 Machines:
+
+Install OpenSSH Server
+* sudo apt-get install openssh-server -y
+
+Install Net-Tools
+* sudo apt-get install net-tools -y
+
+
 # Installation Guide:
 
 ## On Primary, Standby1 and Standby2 Hosts
@@ -19,7 +47,7 @@ Copy pgpool host’s root key to standby1, standby2 and primary for ssh password
 * ssh-copy-id postgres@$SB1_IP
 * ssh-copy-id postgres@$SB2_IP
  
-## Rename hosts.yml.in file to hosts.yml and update
+## Rename hosts.yml.in file to hosts.yml
 
 * mv hosts.yml.in host.yml  
 
