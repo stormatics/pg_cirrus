@@ -1,4 +1,4 @@
-# Steps to follow:
+# Installation Guide:
 
 ## On Primary, Standby1 and Standby2 Hosts
 Create postgres user and give it sudo privileges 
@@ -9,7 +9,7 @@ Create postgres user and give it sudo privileges
 
 ## Clone github repository
 * sudo su -
-* git clone - https://<username>:<token>@github.com/stormatics/pg_cirrus.git
+* git clone - https://<username>:<token>@github.com/stormatics/pg_cirrus
 
 ## Generate SSH key pair
 Copy pgpool host’s root key to standby1, standby2 and primary for ssh passwordless access
@@ -24,12 +24,14 @@ Copy pgpool host’s root key to standby1, standby2 and primary for ssh password
 * mv hosts.yml.in host.yml  
 
 ## Edit hosts.yml file
+### Open hosts.yml file and find the following lines:
 * PG_PRIMARY_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
 * PG_SB1_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
 * PG_SB2_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
 
 
 ### Replace the fields ansible_host and ansible_become with your ip addresses and passwords
+### Note:
 * PG_PRIMARY_HOST stands for Primary Node
 * PG_SB1_HOST stands for Standby 1 Node
 * PG_SB2_HOST stands for Standby 2 Node
