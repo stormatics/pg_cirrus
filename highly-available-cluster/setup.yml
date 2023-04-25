@@ -15,7 +15,7 @@
       include_tasks: tasks/get-latest-server-version.yml
       when: _PG_VERSION == "_LATEST_"
 
-    # Value of _PG_VERSION in common.yml is replaced with latest version number if _PG_VERSION== '_LATEST_'.
+    # Value of _PG_VERSION in common.yml is replaced with latest version number if _PG_VERSION == '_LATEST_'.
     - name: Replace _LATEST_ in common.yml with _PG_VERSION
       replace:
         path: common.yml
@@ -67,7 +67,7 @@
         dest: "{{ _PG_CIRRUS_DIRECTORY }}/pfile"
         content: "{{ _PG_PASSWORD }}"
 
-    # Initialize the data directory for the Primary PostgreSQL server to _PG_CIRRUS_DIRECTORY in common.yml.
+    # Initialize the data directory for the Primary PostgreSQL server to _PG_CIRRUS_DIRECTORY/_PG_PRIMARY_DATA_DIRECTORY_NAME in common.yml.
     - name: Initialize the data directory
       become_user: postgres
       shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/initdb -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }} --pwfile {{ _PG_CIRRUS_DIRECTORY }}/pfile --encoding=utf-8 -A scram-sha-256
@@ -210,10 +210,10 @@
         - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }}'" } #Data directory path for standby1 PostgreSQL server
-        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ lookup('env', 'PWD') }}/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ _PG_VERSION }}'" } # Parameters for failover command are set
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ lookup('env', 'PWD') }}/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary command are set
+        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ lookup('env', 'PWD') }}/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ _PG_VERSION }}'" } # Parameters for failover_command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ lookup('env', 'PWD') }}/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary_command are set
 
-    # Configuration for standby2 PostgreSQL server are added to pgpool.con file
+    # Configuration for standby2 PostgreSQL server are added to pgpool.conf file
     - name: Insert new entries for standby2 server inside pgpool.conf file
       lineinfile:
         path: /etc/pgpool2/pgpool.conf

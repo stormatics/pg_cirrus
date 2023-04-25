@@ -13,7 +13,7 @@
   set_fact:
     latest_server_version: "{{ download_page.content | regex_findall('PostgreSQL ([0-9]+\\.[0-9]+)') | first }}"
 
-# Parse the server version number and saves major version to _PG_VERSION
+# Parse the server version number and save major version to _PG_VERSION
 - name: Parse Server Version Number
   set_fact:
     _PG_VERSION: "{{ latest_server_version.split('.')[0] }}"

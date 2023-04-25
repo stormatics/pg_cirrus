@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # follow_primary.sh
-# This script is executed by follow_primary_command parameter used by pgpool.conf file. This fil will be executed on all standby nodes including new primary node as well.
+# This script is executed by follow_primary_command parameter used by pgpool.conf file. This file will be executed on all standby nodes including new primary node as well.
 # We are updating replication properties from all standby nodes to the new primary node
 
 
