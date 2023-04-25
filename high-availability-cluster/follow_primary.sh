@@ -1,6 +1,9 @@
 #!/bin/bash
+
 # follow_primary.sh
-# This script is run when failover is completed. This file runs on all standby hosts
+# This script is executed by follow_primary_command parameter used by pgpool.conf file. This fil will be executed on all standby nodes including new primary node as well.
+# We are updating replication properties from all standby nodes to the new primary node
+
 
 set -o xtrace
 
@@ -36,6 +39,7 @@ if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 	echo nothing to do
 	exit 0
 fi
+
 # Creates a new replication slot on new primary
 ssh postgres@$NEW_MAIN_NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_create_physical_replication_slot('sb2');\""
 
