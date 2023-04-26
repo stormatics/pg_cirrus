@@ -209,12 +209,12 @@
         - { regexp: "#backend_weight0 = 1", replace: "backend_weight0 = 0" } # Set the weight of the primary PostgreSQL node to 0 for load balancing.
         - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }}'" } # Data directory path for primary PostgreSQL server
-        - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }}'" } #Data directory path for standby1 PostgreSQL server
+        - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }}'" } # Data directory path for standby1 PostgreSQL server
         - { regexp: "#failover_command = ''", replace: "failover_command = '{{ lookup('env', 'PWD') }}/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ _PG_VERSION }}'" } # Parameters for failover_command are set
         - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ lookup('env', 'PWD') }}/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary_command are set
 
     # Configuration for standby2 PostgreSQL server are added to pgpool.conf file
-    - name: Insert new entries for standby2 server inside pgpool.conf file
+    - name: Insert new entry for standby2 server inside pgpool.conf file
       lineinfile:
         path: /etc/pgpool2/pgpool.conf
         line: |
