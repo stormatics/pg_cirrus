@@ -220,7 +220,7 @@
         line: |
           backend_hostname2 = '{{ hostvars['PG_SB2_HOST']['ansible_host'] }}' # Set the hostname for the standby2 PostgreSQL node.
           backend_port2 = {{ _PG_PORT }} # Set the port for standby2 PostgreSQL node.
-          backend_weight2 = 1 # Set the weight of standby2 PostgreSQL node to 1 for loadbalancing.
+          backend_weight2 = 1 # Set the weight of standby2 PostgreSQL node to 1 for load balancing.
           backend_data_directory2 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY2_DATA_DIRECTORY_NAME }}' # Data directory path for standby2 PostgreSQL server.
         insertafter: EOF
 
