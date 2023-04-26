@@ -1,7 +1,6 @@
 # highly-available-cluster
-## This directory contains script files to automate setting up 3-Node highly available PostgreSQL cluster.
+This directory contains script files to automate setting up 3-Node highly available PostgreSQL cluster.
 # Pre-requisites:
-
 
 ## Pgpool Machine
 
