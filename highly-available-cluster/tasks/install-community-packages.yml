@@ -10,7 +10,7 @@
     line: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
     create: true
 
-# Download the PostgreSQL key and adds it to the system keyring
+# Download the PostgreSQL key and add it to the system keyring
 - name: Download PostgreSQL key and add it
   apt_key:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
