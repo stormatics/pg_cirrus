@@ -63,7 +63,7 @@ Copy pgpool host’s root key to standby1, standby2 and primary for ssh password
 * PG_SB1_HOST stands for Standby 1 Node
 * PG_SB2_HOST stands for Standby 2 Node
 
-You can find your ip address on primary, standby1 and standby2 machines using ifconfig command.
+You can find your ip address on primary, standby1 and standby2 hosts using ifconfig command.
 
 ## Run ansible playbook
 * sudo ansible-playbook -i hosts.yml setup.yml
