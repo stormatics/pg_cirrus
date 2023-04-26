@@ -18,7 +18,7 @@ set -o xtrace
 # 10) %R = new main database cluster path
 # 11) %N = old primary node hostname
 # 12) %S = old primary node port number
-# 13) PG_MAJOR_VERSION = major version number of postgresql server
+# 13) PG_MAJOR_VERSION = major version number of PostgreSQL server
 # 14) %% = '%' character
 
 # Assigning values to variables using the special values in the failover_command
