@@ -37,7 +37,7 @@ Create postgres user and give it sudo privileges
 
 ## Clone github repository
 * sudo su -
-* git clone - https://<username>:<token>@github.com/stormatics/pg_cirrus
+* git clone https://github.com/stormatics/pg_cirrus
 
 ## Generate SSH key pair
 Copy pgpool host’s root key to standby1, standby2 and primary for ssh passwordless access

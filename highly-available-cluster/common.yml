@@ -8,8 +8,8 @@ _PG_PORT: 5432
 # PostgreSQL server password. This is cleartext, a security hazard we will handle it later
 _PG_PASSWORD: 123
 
-# PostgreSQL server version, '_LATEST_' tag will always get the latest version. If another version is required it can be specified here.
-_PG_VERSION: _LATEST_
+# PostgreSQL server version, '15' tag will always get the latest version. If another version is required it can be specified here.
+_PG_VERSION: 15
 
 # Directory where Cirrus configuration files are stored and it will also contain data directories
 _PG_CIRRUS_DIRECTORY: /home/postgres/stormatics/pg_cirrus
