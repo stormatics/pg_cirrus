@@ -2,7 +2,7 @@
 This directory contains script files to automate setting up 3-Node highly available PostgreSQL cluster.
 # Prerequisites:
 
-## Pgpool Machine
+## Pgpool Node:
 
 Install OpenSSH Server
 * sudo apt-get install openssh-server -y
@@ -16,7 +16,7 @@ Install Ansible
 Install Git
 * sudo apt-get install git -y
 
-## Primary, Standby1 and Standby2 Machines:
+## Primary, Standby1 and Standby2 Nodes:
 
 Install OpenSSH Server
 * sudo apt-get install openssh-server -y
@@ -27,18 +27,18 @@ Install Net-Tools
 
 # Installation Guide:
 
-## On Primary, Standby1 and Standby2 Hosts
+## On Primary, Standby1 and Standby2 Nodes:
 Create postgres user and give it sudo privileges 
 * sudo adduser postgres
 * sudo usermod -aG sudo postgres
 
-## On Pgpool Machine
+## On Pgpool Node:
 
 ## Clone github repository
 * sudo su -
 * git clone https://github.com/stormatics/pg_cirrus
 
-## Generate SSH key pair
+## Generate SSH key pair copy public key to primary and standby nodes
 Copy pgpool host’s root key to standby1, standby2 and primary for ssh passwordless access
 * sudo su -
 * ssh-keygen 
