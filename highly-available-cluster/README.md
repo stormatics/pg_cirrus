@@ -1,6 +1,6 @@
 # highly-available-cluster
 This directory contains script files to automate setting up 3-Node highly available PostgreSQL cluster.
-# Pre-requisites:
+# Prerequisites:
 
 ## Pgpool Machine
 
@@ -48,7 +48,7 @@ Copy pgpool host’s root key to standby1, standby2 and primary for ssh password
  
 ## Rename hosts.yml.in file to hosts.yml
 
-* mv hosts.yml.in host.yml  
+* mv hosts.yml.in hosts.yml  
 
 ## Edit hosts.yml file
 ### Open hosts.yml file and find the following lines:
