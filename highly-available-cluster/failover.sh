@@ -1,6 +1,7 @@
 #!/bin/bash
+
 # failover.sh
-# This script is run by failover_command. This script runs when the primary PostgreSQL node fails and a standby node is promoted as primary node. 
+# This script is executed by failover_command parameter used by pgpool.conf file. It is used to promote standby server to primary in case of failover.
 
 set -o xtrace
 
@@ -20,7 +21,7 @@ set -o xtrace
 # 13) PG_MAJOR_VERSION = major version number of postgresql server
 # 14) %% = '%' character
 
-# Assigning values to variables using the special values in the failover command
+# Assigning values to variables using the special values in the failover_command
 FAILED_NODE_ID="$1"
 FAILED_NODE_HOST="$2"
 FAILED_NODE_PORT="$3"
@@ -35,5 +36,5 @@ OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
 PG_MAJOR_VERSION="${13}"
 
-# Promoting the new main node to primary using pg_ctl command on the new main node host
+# Promoting standby node as new primary node
 ssh postgres@$NEW_MAIN_NODE_HOST "/usr/lib/postgresql/$PG_MAJOR_VERSION/bin/pg_ctl -D $NEW_MAIN_NODE_PGDATA promote"
