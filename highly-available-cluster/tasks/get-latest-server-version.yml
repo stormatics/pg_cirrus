@@ -1,3 +1,4 @@
+---
 # get-latest-server-version.yml
 # If value of _PG_VERSION from common.yml is _LATEST_ then this file will be called and it will retrieve the latest version of the PostgreSQL server from community website
 
