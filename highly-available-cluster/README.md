@@ -1,14 +1,22 @@
 # highly-available-cluster
-This directory contains script files to automate setting up 3-Node highly available PostgreSQL cluster.
-# Prerequisites:
 
-## Pgpool Node:
+This directory contains script files to setting up 3-Node highly available PostgreSQL cluster.
+
+## Prerequisites
+
+### Configure Primary, Standby1 and Standby2 Nodes
 
 Install OpenSSH Server
 * sudo apt-get install openssh-server -y
 
-Install Net-Tools
-* sudo apt-get install net-tools -y
+Create postgres user and give it sudo privileges
+* sudo adduser postgres
+* sudo usermod -aG sudo postgres
+
+### Configure Pgpool Node
+
+Install OpenSSH Server
+* sudo apt-get install openssh-server -y
 
 Install Ansible
 * sudo apt-get install ansible -y
@@ -16,57 +24,25 @@ Install Ansible
 Install Git
 * sudo apt-get install git -y
 
-## Primary, Standby1 and Standby2 Nodes:
+Copy pgpool host’s root public key to primary, Stancby1 and Standby2 nodes for ssh passwordless access
 
-Install OpenSSH Server
-* sudo apt-get install openssh-server -y
-
-Install Net-Tools
-* sudo apt-get install net-tools -y
-
-
-# Installation Guide:
-
-## On Primary, Standby1 and Standby2 Nodes:
-Create postgres user and give it sudo privileges 
-* sudo adduser postgres
-* sudo usermod -aG sudo postgres
-
-## On Pgpool Node:
-
-## Clone github repository
-* sudo su -
-* git clone https://github.com/stormatics/pg_cirrus
-
-## Generate SSH key pair copy public key to primary and standby nodes
-Copy pgpool host’s root key to standby1, standby2 and primary for ssh passwordless access
+**NOTE**: If you have already generated public key of root user you may skip first 2 steps and move to 3rd step
 * sudo su -
 * ssh-keygen 
 * ssh-copy-id postgres@$PRIMARY_IP
-* ssh-copy-id postgres@$SB1_IP
-* ssh-copy-id postgres@$SB2_IP
+* ssh-copy-id postgres@$STANDBY1_IP
+* ssh-copy-id postgres@$STANDBY2_IP
+
+Clone github repository
+* git clone https://github.com/stormatics/pg_cirrus
  
-## Rename hosts.yml.in file to hosts.yml
+### Prepare hosts.yml.in file
 
-* mv hosts.yml.in hosts.yml  
+* cp hosts.yml.in hosts.yml
 
-## Edit hosts.yml file
-### Open hosts.yml file and find the following lines:
-* PG_PRIMARY_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
-* PG_SB1_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
-* PG_SB2_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
+**NOTE**: Replace the fields ansible_host and ansible_become with your ip addresses and passwords You can find your ip address on primary, standby1 and standby2 hosts using ifconfig command.
 
-
-### Replace the fields ansible_host and ansible_become with your ip addresses and passwords
-### Note:
-* PG_PRIMARY_HOST stands for Primary Node
-* PG_SB1_HOST stands for Standby 1 Node
-* PG_SB2_HOST stands for Standby 2 Node
-
-You can find your ip address on primary, standby1 and standby2 hosts using ifconfig command.
-
-## Run ansible playbook
+### Run ansible playbook
 * sudo ansible-playbook -i hosts.yml setup.yml
 
 Your 3 Node Cluster with failover must now be running smoothly 
-

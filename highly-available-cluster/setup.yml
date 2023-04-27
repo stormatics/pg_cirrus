@@ -1,6 +1,6 @@
 ---
 # setup.yml
-# This is main ansible playbook it is used to configure 3-Node PostgreSQL cluster with a remote primary node, 2 remote standby nodes and a localhost pgpool node. 
+# This is main ansible playbook it is used to configure 3-Node PostgreSQL cluster with 1 primary, 2 standby and a local pgpool node.
 # Access to 3 remote nodes is required and pgpool would be configured on host where we will trigger pg_cirrus.
 
 # If _PG_VERSION == '_LATEST_' then latest PostgreSQL version will be fetched and _PG_VERSION variable inside common.yml will be replaced with latest version.
@@ -10,12 +10,12 @@
   vars_files:
     - common.yml
   tasks:
-    # Extract the latest PostgreSQL version using get-latest-server-version.yml file if _PG_VERSION == '_LATEST_' in common.yml.
+    # if _PG_VERSION == '_LATEST_' in common.yml. Then get the latest PostgreSQL version using get-latest-server-version.yml file.
     - name: Include tasks if _PG_VERSION is _LATEST_
       include_tasks: tasks/get-latest-server-version.yml
       when: _PG_VERSION == "_LATEST_"
 
-    # Value of _PG_VERSION in common.yml is replaced with latest version number if _PG_VERSION == '_LATEST_'.
+    # Value of _PG_VERSION in common.yml will be replaced by latest version.
     - name: Replace _LATEST_ in common.yml with _PG_VERSION
       replace:
         path: common.yml
@@ -38,7 +38,7 @@
         path: "{{ _PG_CIRRUS_DIRECTORY }}"
         state: directory
 
-    # Check if the required PostgreSQL version is latest or a specific version. 
+    # Check if _PG_VERSION is _LATEST_ then set is_latest to True.
     - name: Check if PG_VERSION is Latest
       set_fact:
         is_latest: "{{ _PG_VERSION == '_LATEST_' }}"
@@ -67,7 +67,7 @@
         dest: "{{ _PG_CIRRUS_DIRECTORY }}/pfile"
         content: "{{ _PG_PASSWORD }}"
 
-    # Initialize the data directory for the Primary PostgreSQL server to _PG_CIRRUS_DIRECTORY/_PG_PRIMARY_DATA_DIRECTORY_NAME in common.yml.
+    # Initialize the data directory for the Primary PostgreSQL server
     - name: Initialize the data directory
       become_user: postgres
       shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/initdb -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }} --pwfile {{ _PG_CIRRUS_DIRECTORY }}/pfile --encoding=utf-8 -A scram-sha-256
@@ -90,7 +90,7 @@
       become_user: postgres
       shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/pg_ctl -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }} start
 
-    # Create a replication user for PostgreSQL.
+    # Create a replication user.
     - name: Creating a replication user
       postgresql_query:
         login_user: postgres
@@ -124,7 +124,7 @@
       include_vars:
         file: common.yml
 
-    # Create a directory to store configuration files and data directory for Standby PostgreSQL servers. It uses the _PG_CIRRUS_DIRECTORY variable to set the directory path.
+    # Create a directory to store configuration files and data directory for Standby PostgreSQL servers.
     - name: Creating pg_cirrus directory
       become_user: postgres
       file:
@@ -146,7 +146,7 @@
     - name: Stop already running service
       shell: service postgresql stop
 
-    # Run pg_basebackup command to create standby server 1
+    # Run pg_basebackup command to create data directory for standby server 1
     - name: Running pg_basebackup for standby1 server
       become_user: postgres
       shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PG_PRIMARY_HOST']['ansible_host'] }} -U repuser -X stream -C -S sb1 -v -R -w -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }}"
@@ -158,7 +158,7 @@
       shell: /usr/lib/postgresql/{{ _PG_VERSION }}/bin/pg_ctl -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }} start
       when: inventory_hostname == 'PG_SB1_HOST'
 
-    # Run pg_basebackup command to create standby server 2
+    # Run pg_basebackup command to create data directory for standby server 2
     - name: Running pg_basebackup for standby2 server
       become_user: postgres
       shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PG_PRIMARY_HOST']['ansible_host'] }} -U repuser -X stream -C -S sb2 -v -R -w -D {{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY2_DATA_DIRECTORY_NAME }}"
