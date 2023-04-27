@@ -6,3 +6,7 @@ pg_cirrus is a solution for setting up a 3-Node highly available PostgreSQL clus
 Main technologies used are PostgreSQL and Ansible.
 
 The objective of this project is to configure a highly available 3-Node cluster in easiest possible way.
+
+# License
+
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0). You can find a copy of the license in the [LICENSE](LICENSE) file.
