@@ -51,12 +51,13 @@ Copy pgpool host’s root key to standby1, standby2 and primary for ssh password
 * mv hosts.yml.in hosts.yml  
 
 ## Edit hosts.yml file
-Open hosts.yml file and find the following lines:
+### Open hosts.yml file and find the following lines:
 * PG_PRIMARY_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
 * PG_SB1_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
 * PG_SB2_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
 
-Replace the fields ansible_host and ansible_become with your ip addresses and passwords
+
+### Replace the fields ansible_host and ansible_become with your ip addresses and passwords
 ### Note:
 * PG_PRIMARY_HOST stands for Primary Node
 * PG_SB1_HOST stands for Standby 1 Node
