@@ -80,4 +80,4 @@ $ mv hosts.yml.in hosts.yml
 ```
 $ sudo ansible-playbook -i hosts.yml setup.yml
 ```
-Your 3 Node Cluster with failover must now be running smoothly 
+Your 3-node cluster with failover must now be running smoothly 

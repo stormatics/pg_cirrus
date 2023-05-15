@@ -11,7 +11,7 @@ PG_SB1_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=pos
 PG_SB2_HOST ansible_host=xxx.xxx.xxx.xxx ansible_connection=ssh ansible_user=postgres ansible_become_pass=xxxxxxxx
 
 # Inventory group for primary server.
-# NOTE: In future we will not be using PG_PRIMARY_GROUPS instead we will use a single PG_PRIMARY_HOST
+# NOTE: In future we will not be using PG_PRIMARY_GROUP instead we will use a single PG_PRIMARY_HOST
 [PG_PRIMARY_GROUP]
 PG_PRIMARY_HOST
 
