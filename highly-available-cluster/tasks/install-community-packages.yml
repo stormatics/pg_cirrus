@@ -11,7 +11,7 @@
     create: true
 
 # Download the PostgreSQL key and add it to the system keyring
-- name: Download PostgreSQL key and add it
+- name: Download PostgreSQL key and add it to system keyring
   apt_key:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     state: present

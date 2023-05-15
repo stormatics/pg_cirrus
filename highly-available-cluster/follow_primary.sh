@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # follow_primary.sh
-# This script is executed by follow_primary_command parameter used by pgpool.conf file. This file will gets executed on all standby nodes including new primary node as well.
+# This script is executed by follow_primary_command parameter used by pgpool.conf file. This file gets executed on all standby nodes including new primary node as well.
 # We are updating replication properties from all standby nodes to the new primary node
 
 set -o xtrace
@@ -34,16 +34,16 @@ NEW_MAIN_NODE_PGDATA="${10}"
 OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
  
-# Checks if this script is being executed on newly promoted primary then we don't need to do anything
+# Check if this script is being executed on newly promoted primary then we don't need to do anything
 if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 	echo Nothing to do
 	exit 0
 fi
 
-# Creates a new replication slot on new primary
+# Create a new replication slot on new primary
 ssh postgres@$NEW_MAIN_NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_create_physical_replication_slot('sb2');\""
 
-# Updates connection string on all standby nodes to point to new primary
+# Update connection string on all standby nodes to point to new primary
 ssh postgres@$NODE_HOST "echo 123 |  psql -d postgres -W -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser password=repuserpassword channel_binding=prefer host=$NEW_MAIN_NODE_HOST port=5432 sslmode=prefer sslcompression=0 sslsni=1 ssl_min_protocol_version=TLSv1.2 gssencmode=prefer krbsrvname=postgres target_session_attrs=any';\""
 
 # Reload connection properties
