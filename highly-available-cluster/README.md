@@ -66,6 +66,11 @@ Clone github repository
 ```
 $ git clone https://github.com/stormatics/pg_cirrus
 ```
+Go into the directory 
+
+```
+cd pg_cirrus/highly-available-cluster/
+```
  
 ### Prepare hosts.yml.in file
 
