@@ -1,0 +1,28 @@
+---
+# install-community-packages.yml
+# We are using this file to fetch community packages available inside PGDG repository
+# Tasks included in this file are to add PGDG repository, download PostgreSQL key, update cache using apt and install specified package
+
+# Add the repository for PostgreSQL to the list of sources used by apt-get to install packages
+- name: Add pgdg repo to sources.list.d
+  lineinfile:
+    path: /etc/apt/sources.list.d/pgdg.list
+    line: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    create: true
+
+# Download the PostgreSQL key and add it to the system keyring
+- name: Download PostgreSQL key and add it to system keyring
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+# Update the local cache of packages available in the repository, so that the latest packages can be installed
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+# Install the package specified in the "_PACKAGE_NAME" variable using apt-get
+- name: Install package
+  apt:
+    name: "{{ _PACKAGE_NAME }}"
+    state: present

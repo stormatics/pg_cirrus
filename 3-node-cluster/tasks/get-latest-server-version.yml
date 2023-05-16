@@ -1,0 +1,20 @@
+---
+# get-latest-server-version.yml
+# If value of _PG_VERSION from common.yml is _LATEST_ then this file will be called and it will retrieve the latest version of the PostgreSQL server from community website
+
+# Retrieve the PostgreSQL download page
+- name: Retrieve PostgreSQL Download Page
+  uri:
+    url: https://www.postgresql.org/download/
+    return_content: yes
+  register: download_page
+
+# Extract the latest server version from the download page.
+- name: Extract Latest Server Version
+  set_fact:
+    latest_server_version: "{{ download_page.content | regex_findall('PostgreSQL ([0-9]+\\.[0-9]+)') | first }}"
+
+# Parse the server version number and save major version to _PG_VERSION
+- name: Parse Server Version Number
+  set_fact:
+    _PG_VERSION: "{{ latest_server_version.split('.')[0] }}"
