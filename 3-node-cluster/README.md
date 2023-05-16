@@ -1,4 +1,4 @@
-# highly-available-cluster
+# 3-node-cluster
 
 This directory contains script files for setting up 3-node highly available PostgreSQL cluster.
 
