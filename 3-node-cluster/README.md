@@ -69,7 +69,7 @@ $ git clone https://github.com/stormatics/pg_cirrus
 Go into the directory 
 
 ```
-cd pg_cirrus/highly-available-cluster/
+$ cd pg_cirrus/3-node-cluster/
 ```
  
 ### Prepare hosts.yml.in file
