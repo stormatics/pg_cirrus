@@ -4,23 +4,25 @@
 # Access to 3 remote nodes is required and pgpool would be configured on host where we will trigger pg_cirrus.
 
 # If _PG_VERSION == '_LATEST_' then latest PostgreSQL version will be fetched and _PG_VERSION variable inside common.yml will be replaced with latest version.
-- name: Get Latest PostgreSQL Server Version
-  hosts: localhost
-  gather_facts: false
+- name: Install PostgreSQL on all the nodes in cluster
+  hosts: all
+  gather_facts: true
+  become: true
   vars_files:
     - common.yml
   tasks:
-    # if _PG_VERSION == '_LATEST_' in common.yml. Then get the latest PostgreSQL version using get-latest-server-version.yml file.
-    - name: Include tasks if _PG_VERSION is _LATEST_
-      include_tasks: tasks/get-latest-server-version.yml
-      when: _PG_VERSION == "_LATEST_"
+    - name: Install PostgreSQL
+      include_tasks: tasks/install-community-packages.yml
+      vars:
+        _PACKAGE_NAME: "{{ 'postgresql' if _PG_VERSION == '_LATEST_' else 'postgresql-' + _PG_VERSION | string }}"
 
-    # Value of _PG_VERSION in common.yml will be replaced by latest version.
-    - name: Replace _LATEST_ in common.yml with _PG_VERSION
-      replace:
-        path: common.yml
-        regexp: '_LATEST_'
-        replace: "{{ _PG_VERSION }}"
+    - name: Get the version of installed PostgreSQL
+      shell: echo $(psql --version | awk '{print $3}' | awk -F'.' '{print $1}')
+      register: _PG_VERSION
+
+    - name: Set _PG_VERSION fact
+      set_fact:
+        _PG_VERSION: "{{ _PG_VERSION.stdout }}"
 
 # Configure the PostgreSQL primary server.
 - name: Configure PostgreSQL primary server
@@ -37,17 +39,6 @@
       file:
         path: "{{ _PG_CIRRUS_DIRECTORY }}"
         state: directory
-
-    # Check if _PG_VERSION is _LATEST_ then set is_latest to True.
-    - name: Check if PG_VERSION is Latest
-      set_fact:
-        is_latest: "{{ _PG_VERSION == '_LATEST_' }}"
-
-    # Determine the packge name using is_latest variable. Package is installed using install-community-packages.yml. 
-    - name: "Install PostgreSQL {{ _PG_VERSION }}"
-      vars:
-        _PACKAGE_NAME: "{{ 'postgresql' if is_latest else 'postgresql-' + _PG_VERSION|string }}"
-      include_tasks: tasks/install-community-packages.yml
 
     # Stop the primary PostgreSQL server if it is already running.
     - name: Stop already running service
@@ -131,17 +122,6 @@
         path: "{{ _PG_CIRRUS_DIRECTORY }}"
         state: directory
 
-    # Check if the required PostgreSQL version is latest or a specific version.
-    - name: Check if _PG_VERSION is _LATEST_
-      set_fact:
-        is_latest: "{{ _PG_VERSION == '_LATEST_' }}"
-
-    # Determine the packge name using is_latest variable. Package is installed using install-community-packages.yml.
-    - name: "Install PostgreSQL {{ _PG_VERSION }}"
-      vars:
-        _PACKAGE_NAME: "{{ 'postgresql' if is_latest else 'postgresql-' + _PG_VERSION|string }}"
-      include_tasks: tasks/install-community-packages.yml
-
     # Stop standby PostgreSQL servers
     - name: Stop already running service
       shell: service postgresql stop
@@ -210,8 +190,8 @@
         - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_PRIMARY_DATA_DIRECTORY_NAME }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ _PG_CIRRUS_DIRECTORY }}/{{ _PG_STANDBY1_DATA_DIRECTORY_NAME }}'" } # Data directory path for standby1 PostgreSQL server
-        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ lookup('env', 'PWD') }}/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ _PG_VERSION }}'" } # Parameters for failover_command are set
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ lookup('env', 'PWD') }}/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary_command are set
+        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ hostvars['PG_PRIMARY_HOST']._PG_VERSION }}'" } # Parameters for failover_command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary_command are set
 
     # Configuration for standby2 PostgreSQL server are added to pgpool.conf file
     - name: Insert new entry for standby2 server inside pgpool.conf file

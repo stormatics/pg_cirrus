@@ -22,7 +22,7 @@
     update_cache: yes
 
 # Install the package specified in the "_PACKAGE_NAME" variable using apt-get
-- name: Install package
+- name: Install package {{ _PACKAGE_NAME }}
   apt:
     name: "{{ _PACKAGE_NAME }}"
     state: present
