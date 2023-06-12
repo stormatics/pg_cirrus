@@ -1,0 +1,1 @@
+PRIMARY ansible_host=172.16.14.156 ansible_connection=ssh ansible_user=semab

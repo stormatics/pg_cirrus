@@ -1,0 +1,15 @@
+- name: Setup Primary server
+  hosts: PRIMARY
+  gather_facts: true
+  become_user: semab
+  tasks:
+    - name: Creating pg_cirrus directory
+      file:
+        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        state: directory
+
+    - name: Installing PostgreSQL
+      include_tasks: install-community-packages.yml
+      become_user: root
+      vars:
+        _PACKAGE_NAME: "{{ 'postgresql' if POSTGRESQL_VERSION == '_LATEST_' else 'postgresql-' + POSTGRESQL_VERSION | string }}"
