@@ -1,15 +1,94 @@
-- name: Setup Primary server
+---
+# setup.yml
+# This is main ansible playbook it is used to configure 3-node PostgreSQL cluster with 1 primary, 2 standby and a local pgpool node.
+# Access to 3 remote nodes is required and pgpool would be configured on host where we will trigger pg_cirrus.
+
+# If _PG_VERSION == '_LATEST_' then latest PostgreSQL version will be fetched and _PG_VERSION variable inside common.yml will be replaced with latest version.
+
+# Configure the PostgreSQL primary server.
+- name: Configure PostgreSQL primary server
   hosts: PRIMARY
-  gather_facts: true
-  become_user: semab
+  become: true
   tasks:
+    - name: Load common variables
+      include_vars:
+        file: ../var_file.yml
+
+    - name: Install PostgreSQL
+      include_tasks: ../tasks/install-community-packages.yml
+      vars:
+        _PACKAGE_NAME: "{{ 'postgresql-' + PG_VERSION | string }}"
+
+# Create a directory to store configuration files and data directory for Primary PostgreSQL server. It uses the _PG_CIRRUS_DIRECTORY variable to set the directory path.
     - name: Creating pg_cirrus directory
+      become_user: postgres
       file:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
         state: directory
 
-    - name: Installing PostgreSQL
-      include_tasks: install-community-packages.yml
-      become_user: root
-      vars:
-        _PACKAGE_NAME: "{{ 'postgresql' if POSTGRESQL_VERSION == '_LATEST_' else 'postgresql-' + POSTGRESQL_VERSION | string }}"
+    # Stop the primary PostgreSQL server if it is already running.
+    - name: Stop already running service
+      shell: service postgresql stop
+
+    # Install the required python3 and psycopg2 packages.
+    - name: Installing python3-psycopg2
+      apt:
+        name:
+          - python3-psycopg2
+        state: present
+
+    # Create a password file for the PostgreSQL server. It uses the _PG_PASSWORD variable in common.yml to set the password.
+    - name: Creating password file
+      become_user: postgres
+      copy:
+        dest: "{{ PFILE_DIRECTORY }}/pfile"
+        content: "{{ PG_PASSWORD }}"
+
+    # Initialize the data directory for the Primary PostgreSQL server
+    - name: Initialize the data directory
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} --pwfile {{ PFILE_DIRECTORY }}/pfile --encoding=utf-8 -A scram-sha-256
+
+    # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module 
+    - name: Update postgresql.conf
+      become_user: postgres
+      replace:
+        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/postgresql.conf"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      with_items:
+        - { regexp: "#listen_addresses = 'localhost'", replace: "listen_addresses = '*'" } # listen_addresses is set to listen on all IP addresses.
+        - { regexp: "#wal_level = replica", replace: "wal_level = replica" } # wal_level is set to replica.
+        - { regexp: "#max_wal_senders = 10", replace: "max_wal_senders = 10" } # max_wal_senders is set to 10.
+        - { regexp: "#wal_keep_size = 0", replace: "wal_keep_size = 1GB" } # wal_keep_size is set to 1GB.
+
+    # Start the Primary PostgreSQL server.
+    - name: Start the server
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
+
+    # Create a replication user.
+    - name: Creating a replication user
+      postgresql_query:
+        login_user: postgres
+        login_password: "{{ PG_PASSWORD }}"
+        query: create user repuser with password 'repuserpassword' replication;
+
+    # Update the pg_hba.conf file for replication access. 
+    # Unrestricted access to the PostgreSQL server from any IP address (0.0.0.0/0) without any password or other authentication is provided.
+    - name: Update pg_hba.conf
+      become_user: postgres
+      lineinfile:
+        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/pg_hba.conf"
+        line: |
+          host    replication             repuser             all            trust
+          host    all             repuser             all            trust
+          host    replication repuser     0.0.0.0/0         trust
+          host    postgres        postgres        0.0.0.0/0               trust
+        insertafter: EOF
+
+    # Restart the primary PostgreSQL server
+    - name: Restart the server
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} restart
+

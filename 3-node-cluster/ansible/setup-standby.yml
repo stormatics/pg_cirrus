@@ -1,0 +1,44 @@
+# Configure the PostgreSQL standby servers.
+
+- name: Setup Standby servers
+  hosts: STANDBY
+  become: true
+  tasks:
+    - name: Load common variables
+      include_vars:
+        file: ../var_file.yml
+
+    - name: Install PostgreSQL
+      include_tasks: ../tasks/install-community-packages.yml
+      vars:
+        _PACKAGE_NAME: "{{ 'postgresql-' + PG_VERSION | string }}"
+
+    - name: Create pg_cirrus directory
+      become_user: postgres
+      file:
+        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        state: directory
+
+    - name: Set permissions for data directory
+      become_user: postgres
+      file:
+        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        owner: postgres
+        group: postgres
+        mode: "0700"
+        recurse: yes
+
+
+    - name: Stop already running service
+      shell: service postgresql stop
+
+    - name: Run pg_basebackup for standby1 server
+      become_user: postgres
+      shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -C -S {{ item.PG_REPLICATION_SLOT}} -v -R -w -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+      loop: "{{ STANDBY_SERVERS }}"
+      when: inventory_hostname == item.name 
+
+    - name: Start the standby server
+      become_user: postgres
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
+
