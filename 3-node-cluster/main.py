@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 def _EXECUTE_PRIMARY_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/setup-primary.yml"])
@@ -31,19 +32,19 @@ def generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installati
             file.write('  - name: STANDBY' + str(i) + '\n')
             file.write('    PG_REPLICATION_SLOT: ' + server['replication_slot'] + '\n')
 
+
 def get_latest_postgresql_major_version():
     # Add the pgdg repo to sources.list.d
-    subprocess.run(['sudo', 'sh', '-c', 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    os.system('sudo sh -c \'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list\' > /dev/null 2>&1')
 
     # Download PostgreSQL key and add it to system keyring
-    subprocess.run(['wget', '--quiet', 'https://www.postgresql.org/media/keys/ACCC4CF8.asc'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run(['sudo', 'apt-key', 'add', 'ACCC4CF8.asc'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    os.system('wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - > /dev/null 2>&1')
 
     # Update apt cache
-    subprocess.run(['sudo', 'apt', 'update'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    os.system('sudo apt update > /dev/null 2>&1')
 
     # Get the latest major version number
-    output = subprocess.run(['sudo', 'apt-cache', 'policy', 'postgresql'], capture_output=True, text=True).stdout
+    output = os.popen('sudo apt-cache policy postgresql').read()
 
     # Extract the latest major version number
     major_version = next(line.split(':')[1].strip().split('.')[0] for line in output.split('\n') if 'Candidate' in line)
