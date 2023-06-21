@@ -31,6 +31,36 @@ def generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installati
             file.write('  - name: STANDBY' + str(i) + '\n')
             file.write('    PG_REPLICATION_SLOT: ' + server['replication_slot'] + '\n')
 
+def get_latest_postgresql_major_version():
+    # Add the pgdg repo to sources.list.d
+    subprocess.run(['sudo', 'sh', '-c', 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Download PostgreSQL key and add it to system keyring
+    subprocess.run(['wget', '--quiet', 'https://www.postgresql.org/media/keys/ACCC4CF8.asc'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(['sudo', 'apt-key', 'add', 'ACCC4CF8.asc'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Update apt cache
+    subprocess.run(['sudo', 'apt', 'update'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Get the latest major version number
+    output = subprocess.run(['sudo', 'apt-cache', 'policy', 'postgresql'], capture_output=True, text=True).stdout
+
+    # Extract the latest major version number
+    major_version = next(line.split(':')[1].strip().split('.')[0] for line in output.split('\n') if 'Candidate' in line)
+    major_version = major_version.split('+')[0]  # Extract only the major number
+
+    return major_version.strip()
+
+
+def get_postgresql_version():
+    latest_version = get_latest_postgresql_major_version()
+    user_version = input(f"Enter PostgreSQL version (Latest: {latest_version}): ")
+    if user_version.strip():
+        return user_version.strip()
+    else:
+        return latest_version.strip()
+
+
 def main():
     print("Hello World! This is pg_cirrus\n\n")
 
@@ -46,7 +76,7 @@ def main():
         primary_ip = input("Primary PostgreSQL Server IP address: ")
         pg_port = input("PostgreSQL port: ")
         pfile_directory = input("Pfile directory: ")
-        pg_version = input("PostgreSQL version: ")
+        pg_version = get_postgresql_version()
         pg_cirrus_installation_directory = input("pg_cirrus installation directory: ")
         pg_password = input("PostgreSQL password: ")
         print("\n")
