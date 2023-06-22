@@ -91,8 +91,8 @@ def main():
             print("\n")
             standby_servers.append({'ip': standby_ip, 'ssh_username': standby_ssh_username, 'replication_slot': replication_slot})
 
-#        generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installation_directory, pg_password, standby_servers)
-#        generate_inventory_file(primary_ssh_username, primary_ip, standby_servers)
+        generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installation_directory, pg_password, standby_servers)
+        generate_inventory_file(primary_ssh_username, primary_ip, standby_servers)
 
         _EXECUTE_PRIMARY_PLAYBOOK()
         _EXECUTE_STANDBY_PLAYBOOK()
