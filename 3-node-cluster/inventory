@@ -1,0 +1,4 @@
+PRIMARY ansible_host=192.168.105.4 ansible_connection=ssh ansible_user=postgres
+[STANDBY]
+STANDBY1 ansible_host=192.168.105.5 ansible_connection=ssh ansible_user=postgres
+STANDBY2 ansible_host=192.168.105.6 ansible_connection=ssh ansible_user=postgres

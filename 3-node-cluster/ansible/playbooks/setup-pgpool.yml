@@ -5,7 +5,7 @@
   tasks:
     - name: Load common variables
       include_vars:
-        file: ../var_file.yml
+        file: ../../var_file.yml
 
     # Install pgpool2 package using install-community-packages.yml
     - name: Installing pgpool2
@@ -38,8 +38,8 @@
         - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for standby1 PostgreSQL server
-        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }}'" } # Parameters for failover_command are set
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary_command are set
+        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-helper-scripts/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }}'" } # Parameters for failover_command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-helper-scripts/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary_command are set
 
     # Configuration for standby2 PostgreSQL server are added to pgpool.conf file
     - name: Insert new entry for standby2 server inside pgpool.conf file

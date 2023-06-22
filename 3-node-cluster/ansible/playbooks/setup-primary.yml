@@ -12,7 +12,7 @@
   tasks:
     - name: Load common variables
       include_vars:
-        file: ../var_file.yml
+        file: ../../var_file.yml
 
     - name: Install PostgreSQL
       include_tasks: ../tasks/install-community-packages.yml
