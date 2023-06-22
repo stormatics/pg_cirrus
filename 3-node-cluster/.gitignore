@@ -1,1 +1,2 @@
-hosts.yml
+inventory
+var_file.yml
