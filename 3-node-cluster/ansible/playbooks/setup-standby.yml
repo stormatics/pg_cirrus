@@ -14,17 +14,17 @@
         _PACKAGE_NAME: "{{ 'postgresql-' + PG_VERSION | string }}"
 
     - name: Create pg_cirrus directory
-      become_user: postgres
+      become_user: "{{ ansible_user }}"
       file:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
         state: directory
 
     - name: Set permissions for data directory
-      become_user: postgres
+      become_user: "{{ ansible_user }}"
       file:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
-        owner: postgres
-        group: postgres
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: "0700"
         recurse: yes
 
@@ -33,12 +33,12 @@
       shell: service postgresql stop
 
     - name: Run pg_basebackup for standby1 server
-      become_user: postgres
+      become_user: "{{ ansible_user }}"
       shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -C -S {{ item.PG_REPLICATION_SLOT}} -v -R -w -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
       loop: "{{ STANDBY_SERVERS }}"
       when: inventory_hostname == item.name 
 
     - name: Start the standby server
-      become_user: postgres
+      become_user: "{{ ansible_user }}"
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
 
