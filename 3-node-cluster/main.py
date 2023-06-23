@@ -1,68 +1,69 @@
 # Importing required python libraries
 import subprocess
+import os
 
 # Function to execute setu-pgdg-repo.yml playbook on localhost
-def _EXECUTE_PGDG_PLAYBOOK():
+def EXECUTE_PGDG_PLAYBOOK():
     subprocess.run(['ansible-playbook', "ansible/playbooks/setup-pgdg-repo.yml"])
 
 # Function to execute setup-primary.yml playbook on primary server
-def _EXECUTE_PRIMARY_PLAYBOOK():
+def EXECUTE_PRIMARY_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml"])
 
 # Function to execute setup-standby.yml playbook on standby servers
-def _EXECUTE_STANDBY_PLAYBOOK():
+def EXECUTE_STANDBY_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml"])
 
 # Function to execute setup-pgpool.yml playbook on localhost
-def _EXECUTE_PGPOOL_PLAYBOOK():
+def EXECUTE_PGPOOL_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml"])
 
 # Function to generate inventory file at runtime
-def generate_inventory_file(primary_ssh_username, primary_ip, standby_servers):
+def GENERATE_INVENTORY_FILE(PRIMARY_SSH_USERNAME, PRIMARY_IP, STANDBY_SERVERS):
     print("Generating inventory file ...")
 
     with open('inventory', 'w') as file:
-        file.write("PRIMARY ansible_host=" + primary_ip + " ansible_connection=ssh ansible_user=" + primary_ssh_username + "\n")
+        file.write("PRIMARY ansible_host=" + PRIMARY_IP + " ansible_connection=ssh ansible_user=" + PRIMARY_SSH_USERNAME + "\n")
         file.write("[STANDBY]\n")
-        for i, server in enumerate(standby_servers, start=1):
-            file.write("STANDBY" + str(i) + " ansible_host=" + server['ip'] + " ansible_connection=ssh ansible_user=" + server['ssh_username'] + "\n")
+        for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
+            file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=" + SERVER['SSH_USERNAME'] + "\n")
 
 # Function to generate variable file at runtime
-def generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installation_directory, pg_password, standby_servers):
+def GENERATE_VAR_FILE(PG_PORT, PFILE_DIRECTORY, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, PG_PASSWORD, STANDBY_SERVERS):
     print("Generating var_file.yml ...")
     with open('var_file.yml', 'w') as file:
-        file.write('PG_PORT: ' + pg_port + '\n')
-        file.write('PFILE_DIRECTORY: ' + pfile_directory + '\n')
-        file.write('PG_VERSION: ' + pg_version + '\n')
-        file.write('PG_CIRRUS_INSTALLATION_DIRECTORY: ' + pg_cirrus_installation_directory + '\n')
-        file.write('PG_PASSWORD: ' + pg_password + '\n')
+        file.write('PG_PORT: ' + PG_PORT + '\n')
+        file.write('PFILE_DIRECTORY: ' + PFILE_DIRECTORY + '\n')
+        file.write('PG_VERSION: ' + PG_VERSION + '\n')
+        file.write('PG_CIRRUS_INSTALLATION_DIRECTORY: ' + PG_CIRRUS_INSTALLATION_DIRECTORY + '\n')
+        file.write('PG_PASSWORD: ' + PG_PASSWORD + '\n')
         file.write('STANDBY_SERVERS:\n')
-        for i, server in enumerate(standby_servers, start=1):
-            file.write('  - name: STANDBY' + str(i) + '\n')
-            file.write('    PG_REPLICATION_SLOT: ' + server['replication_slot'] + '\n')
+        for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
+            file.write('  - NAME: STANDBY' + str(i) + '\n')
+            file.write('    PG_REPLICATION_SLOT: ' + SERVER['REPLICATION_SLOT'] + '\n')
 
 # Function to get latest PostgreSQL major version
-def get_latest_postgresql_major_version():
+def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
     
-    _EXECUTE_PGDG_PLAYBOOK()
+    EXECUTE_PGDG_PLAYBOOK()
 
     # Get the latest major version number
-    output = os.popen('sudo apt-cache policy postgresql').read()
+    OUTPUT = os.popen('sudo apt-cache policy postgresql').read()
 
     # Extract the latest major version number
-    major_version = next(line.split(':')[1].strip().split('.')[0] for line in output.split('\n') if 'Candidate' in line)
-    major_version = major_version.split('+')[0]  # Extract only the major number
+    MAJOR_VERSION = next(line.split(':')[1].strip().split('.')[0] for line in OUTPUT.split('\n') if 'Candidate' in line)
+    MAJOR_VERSION = MAJOR_VERSION.split('+')[0]  # Extract only the major number
 
-    return major_version.strip()
+    return MAJOR_VERSION.strip()
 
 # Function to set the value of PostgreSQL version to install. If user clicks enter latest will be selected. If user enters a number that version will be installed.
-def get_postgresql_version():
-    latest_version = get_latest_postgresql_major_version()
-    user_version = input(f"Enter PostgreSQL version (Latest: {latest_version}): ")
-    if user_version.strip():
-        return user_version.strip()
+def GET_POSTGRESQL_VERSION():
+    LATEST_VERSION = GET_LATEST_POSTGRESQL_MAJOR_VERSION()
+    USER_VERSION = input(f"Enter PostgreSQL version (Latest: {LATEST_VERSION}): ")
+    if USER_VERSION.strip():
+        return USER_VERSION.strip()
     else:
-        return latest_version.strip()
+        return LATEST_VERSION.strip()
 
 # Main python function
 def main():
@@ -70,36 +71,36 @@ def main():
 
     print("1: Seup 3 node cluster")
     print("2: Add Standby with Primary")
-    user_choice = input("Please enter your choice: ")
+    USER_CHOICE = input("Please enter your choice: ")
 
-    if int(user_choice) == 1:
+    if int(USER_CHOICE) == 1:
         print("Setting up 3 node cluster")
 
         print("Please enter required information for Primary server: \n")
-        primary_ssh_username = input("Username to establish ssh connection: ")
-        primary_ip = input("Primary PostgreSQL Server IP address: ")
-        pg_port = input("PostgreSQL port: ")
-        pfile_directory = input("Pfile directory: ")
-        pg_version = get_postgresql_version()
-        pg_cirrus_installation_directory = input("pg_cirrus installation directory: ")
-        pg_password = input("PostgreSQL password: ")
+        PRIMARY_SSH_USERNAME = input("Username to establish ssh connection: ")
+        PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
+        PG_PORT = input("PostgreSQL port: ")
+        PFILE_DIRECTORY = input("Pfile directory: ")
+        PG_VERSION = GET_POSTGRESQL_VERSION()
+        PG_CIRRUS_INSTALLATION_DIRECTORY = input("pg_cirrus installation directory: ")
+        PG_PASSWORD = input("PostgreSQL password: ")
         print("\n")
-        standby_count = 2
-        standby_servers = []
-        for i in range(1, standby_count + 1):
+        STANDBY_COUNT = 2
+        STANDBY_SERVERS = []
+        for i in range(1, STANDBY_COUNT + 1):
             print("Please enter required information for Standby", i, "server:")
-            standby_ssh_username = input("Username to establish ssh connection: ")
-            standby_ip = input("Standby IP address: ")
-            replication_slot = input("Replication slot name: ")
+            STANDBY_SSH_USERNAME = input("Username to establish ssh connection: ")
+            STANDBY_IP = input("Standby IP address: ")
+            REPLICATION_SLOT = input("Replication slot name: ")
             print("\n")
-            standby_servers.append({'ip': standby_ip, 'ssh_username': standby_ssh_username, 'replication_slot': replication_slot})
+            STANDBY_SERVERS.append({'IP': STANDBY_IP, 'SSH_USERNAME': STANDBY_SSH_USERNAME, 'REPLICATION_SLOT': REPLICATION_SLOT})
 
-        generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installation_directory, pg_password, standby_servers)
-        generate_inventory_file(primary_ssh_username, primary_ip, standby_servers)
+        GENERATE_VAR_FILE(PG_PORT, PFILE_DIRECTORY, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, PG_PASSWORD, STANDBY_SERVERS)
+        GENERATE_INVENTORY_FILE(PRIMARY_SSH_USERNAME, PRIMARY_IP, STANDBY_SERVERS)
 
-        _EXECUTE_PRIMARY_PLAYBOOK()
-        _EXECUTE_STANDBY_PLAYBOOK()
-        _EXECUTE_PGPOOL_PLAYBOOK()
+        EXECUTE_PRIMARY_PLAYBOOK()
+        EXECUTE_STANDBY_PLAYBOOK()
+        EXECUTE_PGPOOL_PLAYBOOK()
 
     elif int(USER_CHOICE) == 2:
       print("Adding Standby with Primary")

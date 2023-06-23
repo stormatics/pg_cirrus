@@ -40,7 +40,7 @@
       become_user: "{{ ansible_user }}"
       shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -C -S {{ item.PG_REPLICATION_SLOT}} -v -R -w -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
       loop: "{{ STANDBY_SERVERS }}"
-      when: inventory_hostname == item.name 
+      when: inventory_hostname == item.NAME 
 
     - name: Start the standby server
       become_user: "{{ ansible_user }}"
