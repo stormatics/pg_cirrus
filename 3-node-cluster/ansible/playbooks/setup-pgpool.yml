@@ -39,7 +39,7 @@
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for standby1 PostgreSQL server
         - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }}'" } # Parameters for failover_command are set
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S'" } # Parameters for follow_primary_command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ STANDBY_SERVERS[1].PG_REPLICATION_SLOT }}'" } # Parameters for follow_primary_command are set
 
     # Configuration for standby2 PostgreSQL server are added to pgpool.conf file
     - name: Insert new entry for standby2 server inside pgpool.conf file

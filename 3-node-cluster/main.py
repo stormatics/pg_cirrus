@@ -1,6 +1,5 @@
 # Importing required python libraries
 import subprocess
-import os
 
 # Function to execute setu-pgdg-repo.yml playbook on localhost
 def _EXECUTE_PGDG_PLAYBOOK():
