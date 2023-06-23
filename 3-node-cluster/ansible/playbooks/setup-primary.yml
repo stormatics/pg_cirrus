@@ -3,8 +3,6 @@
 # This is main ansible playbook it is used to configure 3-node PostgreSQL cluster with 1 primary, 2 standby and a local pgpool node.
 # Access to 3 remote nodes is required and pgpool would be configured on host where we will trigger pg_cirrus.
 
-# If _PG_VERSION == '_LATEST_' then latest PostgreSQL version will be fetched and _PG_VERSION variable inside common.yml will be replaced with latest version.
-
 # Configure the PostgreSQL primary server.
 - name: Configure PostgreSQL primary server
   hosts: PRIMARY

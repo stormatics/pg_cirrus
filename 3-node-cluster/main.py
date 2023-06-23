@@ -1,15 +1,20 @@
+# Importing required python libraries
 import subprocess
 import os
 
+# Function to execute primary server playbook
 def _EXECUTE_PRIMARY_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml"])
 
+# Function to execute Standby servers playbook
 def _EXECUTE_STANDBY_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml"])
 
+# Function to execute pgpool playbook on localhost
 def _EXECUTE_PGPOOL_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml"])
 
+# Function to generate inventory file at runtime
 def generate_inventory_file(primary_ssh_username, primary_ip, standby_servers):
     print("Generating inventory file ...")
 
@@ -19,6 +24,7 @@ def generate_inventory_file(primary_ssh_username, primary_ip, standby_servers):
         for i, server in enumerate(standby_servers, start=1):
             file.write("STANDBY" + str(i) + " ansible_host=" + server['ip'] + " ansible_connection=ssh ansible_user=" + server['ssh_username'] + "\n")
 
+# Function to generate variable file at runtime
 def generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installation_directory, pg_password, standby_servers):
     print("Generating var_file.yml ...")
     with open('var_file.yml', 'w') as file:
@@ -32,7 +38,7 @@ def generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installati
             file.write('  - name: STANDBY' + str(i) + '\n')
             file.write('    PG_REPLICATION_SLOT: ' + server['replication_slot'] + '\n')
 
-
+# Function to get latest PostgreSQL major version
 def get_latest_postgresql_major_version():
     # Add the pgdg repo to sources.list.d
     os.system('sudo sh -c \'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list\' > /dev/null 2>&1')
@@ -52,7 +58,7 @@ def get_latest_postgresql_major_version():
 
     return major_version.strip()
 
-
+# Function to set the value of PostgreSQL version to install. If user clicks enter latest will be selected. If user enters a number that version will be installed.
 def get_postgresql_version():
     latest_version = get_latest_postgresql_major_version()
     user_version = input(f"Enter PostgreSQL version (Latest: {latest_version}): ")
@@ -61,7 +67,7 @@ def get_postgresql_version():
     else:
         return latest_version.strip()
 
-
+# Main python function
 def main():
     print("Hello World! This is pg_cirrus\n\n")
 
