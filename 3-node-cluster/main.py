@@ -4,7 +4,7 @@ import os
 
 # Function to execute setu-pgdg-repo.yml playbook on localhost
 def _EXECUTE_PGDG_PLAYBOOK():
-    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgdg-repo.yml"])
+    subprocess.run(['ansible-playbook', "ansible/playbooks/setup-pgdg-repo.yml"])
 
 # Function to execute setup-primary.yml playbook on primary server
 def _EXECUTE_PRIMARY_PLAYBOOK():
@@ -45,7 +45,7 @@ def generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installati
 # Function to get latest PostgreSQL major version
 def get_latest_postgresql_major_version():
     
-    _EXECUTE_PGDG_PLAYBOOK():
+    _EXECUTE_PGDG_PLAYBOOK()
 
     # Get the latest major version number
     output = os.popen('sudo apt-cache policy postgresql').read()
