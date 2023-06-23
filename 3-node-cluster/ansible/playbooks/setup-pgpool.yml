@@ -7,11 +7,11 @@
       include_vars:
         file: ../../var_file.yml
 
-    # Install pgpool2 package using install-community-packages.yml
-    - name: Installing pgpool2
-      vars:
-        _PACKAGE_NAME: pgpool2
-      include_tasks: ../tasks/install-community-packages.yml
+# Install pgpool using apt
+    - name: Install pgpool2
+      apt:
+        name: pgpool2
+        state: present
 
     # Update pgpool configurations in pgpool.conf file using Ansible's replace module
     - name: Update pgpool.conf file

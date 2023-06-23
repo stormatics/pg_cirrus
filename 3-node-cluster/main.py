@@ -2,15 +2,19 @@
 import subprocess
 import os
 
-# Function to execute primary server playbook
+# Function to execute setu-pgdg-repo.yml playbook on localhost
+def _EXECUTE_PGDG_PLAYBOOK():
+    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgdg-repo.yml"])
+
+# Function to execute setup-primary.yml playbook on primary server
 def _EXECUTE_PRIMARY_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml"])
 
-# Function to execute Standby servers playbook
+# Function to execute setup-standby.yml playbook on standby servers
 def _EXECUTE_STANDBY_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml"])
 
-# Function to execute pgpool playbook on localhost
+# Function to execute setup-pgpool.yml playbook on localhost
 def _EXECUTE_PGPOOL_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml"])
 
@@ -40,14 +44,8 @@ def generate_var_file(pg_port, pfile_directory, pg_version, pg_cirrus_installati
 
 # Function to get latest PostgreSQL major version
 def get_latest_postgresql_major_version():
-    # Add the pgdg repo to sources.list.d
-    os.system('sudo sh -c \'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list\' > /dev/null 2>&1')
-
-    # Download PostgreSQL key and add it to system keyring
-    os.system('wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - > /dev/null 2>&1')
-
-    # Update apt cache
-    os.system('sudo apt update > /dev/null 2>&1')
+    
+    _EXECUTE_PGDG_PLAYBOOK():
 
     # Get the latest major version number
     output = os.popen('sudo apt-cache policy postgresql').read()
@@ -71,7 +69,7 @@ def get_postgresql_version():
 def main():
     print("Hello World! This is pg_cirrus\n\n")
 
-    print("1: Setup 3 node cluster")
+    print("1: Seup 3 node cluster")
     print("2: Add Standby with Primary")
     user_choice = input("Please enter your choice: ")
 

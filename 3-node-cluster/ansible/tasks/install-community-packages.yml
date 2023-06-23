@@ -1,5 +1,5 @@
 ---
-# install-community-packages.yml
+# setup-pgdg-repo.yml
 # We are using this file to fetch community packages available inside PGDG repository
 # Tasks included in this file are to add PGDG repository, download PostgreSQL key, update cache using apt and install specified package
 
@@ -21,8 +21,3 @@
   apt:
     update_cache: yes
 
-# Install the package specified in the "_PACKAGE_NAME" variable using apt-get
-- name: Install package {{ _PACKAGE_NAME }}
-  apt:
-    name: "{{ _PACKAGE_NAME }}"
-    state: present

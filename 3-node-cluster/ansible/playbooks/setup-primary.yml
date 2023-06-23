@@ -12,10 +12,14 @@
       include_vars:
         file: ../../var_file.yml
 
-    - name: Install PostgreSQL
-      include_tasks: ../tasks/install-community-packages.yml
-      vars:
-        _PACKAGE_NAME: "{{ 'postgresql-' + PG_VERSION | string }}"
+    - name: Setup pgdg repo
+      include_tasks: ../tasks/setup-pgdg-repo.yml
+
+# Install the package specified in the "_PACKAGE_NAME" variable using apt-get
+    - name: Install PostgreSQL-{{ PG_VERSION }}
+      apt:
+        name: "{{ 'postgresql-' + PG_VERSION | string }}"
+        state: present
 
 # Create a directory to store configuration files and data directory for Primary PostgreSQL server. It uses the _PG_CIRRUS_DIRECTORY variable to set the directory path.
     - name: Creating pg_cirrus directory
