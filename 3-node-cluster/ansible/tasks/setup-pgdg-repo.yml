@@ -11,12 +11,12 @@
     create: true
 
 # Download the PostgreSQL key and add it to the system keyring
-#- name: Download PostgreSQL key and add it to system keyring
-#  apt_key:
-#    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
-#    state: present
+- name: Download PostgreSQL key and add it to system keyring
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
 
 # Update the local cache of packages available in the repository, so that the latest packages can be installed
-#- name: Update apt cache
-#  apt:
-#    update_cache: yes
+- name: Update apt cache
+  apt:
+    update_cache: yes

@@ -3,7 +3,7 @@ import subprocess
 import os
 import getpass
 
-# Function to execute setu-pgdg-repo.yml playbook on localhost
+# Function to execute setup-pgdg-repo.yml playbook on localhost
 def EXECUTE_PGDG_PLAYBOOK():
     subprocess.run(['ansible-playbook', "ansible/playbooks/setup-pgdg-repo.yml"])
 
@@ -85,23 +85,23 @@ def main():
         PRIMARY_SSH_USERNAME = "postgres"
 
         PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
-        PRIMARY_IP = "172.16.14.156"
+        PRIMARY_IP = "192.168.113.4"
 
         PG_PORT = input("PostgreSQL port: ")
         PG_PORT = "5432"
 
         PG_VERSION = GET_POSTGRESQL_VERSION()
         PG_CIRRUS_INSTALLATION_DIRECTORY = input("pg_cirrus installation directory: ")
-        PG_CIRRUS_INSTALLATION_DIRECTORY = "/home/postgres/st"
+        PG_CIRRUS_INSTALLATION_DIRECTORY = "/home/postgres/stormatics"
 
         CLUSTER_SUBNET = input("Subnet for the cluster")
-        CLUSTER_SUBNET = "172.16.14.0/24"
+        CLUSTER_SUBNET = "192.168.113.0/24"
 
         print("\n")
         STANDBY_COUNT = 2
         STANDBY_SERVERS = []
         STANDBY_SSH_USERNAME = "postgres"
-        STANDBY_IP = "172.16.14.162"
+        STANDBY_IP = "192.168.113.5"
         REPLICATION_SLOT = "sb1"
         for i in range(1, STANDBY_COUNT + 1):
             STANDBY_SERVERS.append({'IP': STANDBY_IP, 'SSH_USERNAME': STANDBY_SSH_USERNAME, 'REPLICATION_SLOT': REPLICATION_SLOT})
@@ -111,15 +111,15 @@ def main():
             STANDBY_SSH_USERNAME = "postgres"
 
             STANDBY_IP = input("Standby IP address: ")
-            STANDBY_IP = "172.16.14.163"
+            STANDBY_IP = "192.168.113.6"
 
             REPLICATION_SLOT = input("Replication slot name: ")
             REPLICATION_SLOT = "sb2"
             print("\n")
             STANDBY_SERVERS.append({'IP': STANDBY_IP, 'SSH_USERNAME': STANDBY_SSH_USERNAME, 'REPLICATION_SLOT': REPLICATION_SLOT})
 
-        GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
-        #GENERATE_INVENTORY_FILE(PRIMARY_SSH_USERNAME, PRIMARY_IP, STANDBY_SERVERS)
+#        GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
+#        GENERATE_INVENTORY_FILE(PRIMARY_SSH_USERNAME, PRIMARY_IP, STANDBY_SERVERS)
 
         EXECUTE_PRIMARY_PLAYBOOK()
         EXECUTE_STANDBY_PLAYBOOK()
