@@ -68,6 +68,24 @@ def GET_POSTGRESQL_VERSION():
     else:
         return LATEST_VERSION.strip()
 
+def GET_POSTGRESQL_PORT():
+    DEFAULT_PORT = 5432
+    USER_PORT = input(f"Enter the PostgreSQL port number: (Default: {DEFAULT_PORT}): ")
+
+    if USER_PORT:
+        return str(USER_PORT)
+    else:
+        return str(DEFAULT_PORT)
+
+def GET_DATA_DIRECTORY_PATH():
+    DEFAULT_PATH = "~/stormatics/pg_cirrus/data"
+    USER_PATH = input(f"Enter the Data Directory Path: (Default: {DEFAULT_PATH}): ")
+
+    if USER_PATH:
+        return USER_PATH
+    else:
+        return DEFAULT_PATH
+
 # Main python function
 def main():
     print("Hello World! This is pg_cirrus\n\n")
@@ -87,12 +105,11 @@ def main():
         PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
         PRIMARY_IP = "192.168.113.4"
 
-        PG_PORT = input("PostgreSQL port: ")
-        PG_PORT = "5432"
+        PG_PORT = GET_POSTGRESQL_PORT()
 
-        PG_VERSION = GET_POSTGRESQL_VERSION()
-        PG_CIRRUS_INSTALLATION_DIRECTORY = input("pg_cirrus installation directory: ")
-        PG_CIRRUS_INSTALLATION_DIRECTORY = "/home/postgres/stormatics"
+#        PG_VERSION = GET_POSTGRESQL_VERSION()
+
+        PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
 
         CLUSTER_SUBNET = input("Subnet for the cluster")
         CLUSTER_SUBNET = "192.168.113.0/24"

@@ -93,5 +93,5 @@
 
     # Restart the primary PostgreSQL server
     - name: Restart the server
-      become_user: postgres
+      become_user: "{{ ansible_user }}"
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} restart
