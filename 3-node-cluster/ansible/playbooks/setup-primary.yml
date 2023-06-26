@@ -12,6 +12,10 @@
       include_vars:
         file: ../../var_file.yml
 
+    - name: Load vault variables
+      include_vars:
+        file: ../../vault.yml
+
     - name: Setup pgdg repo
       include_tasks: ../tasks/setup-pgdg-repo.yml
 
@@ -39,17 +43,17 @@
           - python3-psycopg2
         state: present
 
-    # Create a password file for the PostgreSQL server. It uses the _PG_PASSWORD variable in common.yml to set the password.
     - name: Creating password file
       become_user: "{{ ansible_user }}"
       copy:
-        dest: "{{ PFILE_DIRECTORY }}/pfile"
-        content: "{{ PG_PASSWORD }}"
+        dest: "~/.pfile"
+        mode: 0600
+        content: "{{ pfile_password }}"
 
     # Initialize the data directory for the Primary PostgreSQL server
     - name: Initialize the data directory
       become_user: "{{ ansible_user }}"
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} --pwfile {{ PFILE_DIRECTORY }}/pfile --encoding=utf-8 -A scram-sha-256
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
 
     # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module 
     - name: Update postgresql.conf
@@ -73,8 +77,8 @@
     - name: Creating a replication user
       postgresql_query:
         login_user: postgres
-        login_password: "{{ PG_PASSWORD }}"
-        query: create user repuser with password 'repuserpassword' replication;
+        login_password: "{{ pfile_password }}"
+        query: "create user repuser with password '{{ repuser_password }}' replication;"
 
     # Update the pg_hba.conf file for replication access. 
     # Unrestricted access to the PostgreSQL server from any IP address (0.0.0.0/0) without any password or other authentication is provided.
@@ -83,13 +87,11 @@
       lineinfile:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/pg_hba.conf"
         line: |
-          host    replication             repuser             all            trust
-          host    all             repuser             all            trust
-          host    postgres        postgres        0.0.0.0/0               trust
+          host    replication     repuser     {{ CLUSTER_SUBNET }}       trust
+          host    all             all         {{ CLUSTER_SUBNET }}       trust
         insertafter: EOF
 
     # Restart the primary PostgreSQL server
     - name: Restart the server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} restart
-

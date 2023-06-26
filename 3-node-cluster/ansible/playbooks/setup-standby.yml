@@ -11,7 +11,7 @@
     - name: Setup pgdg repo
       include_tasks: ../tasks/setup-pgdg-repo.yml
 
-# Install the package specified in the "_PACKAGE_NAME" variable using apt-get
+    # Install the package specified in the "_PACKAGE_NAME" variable using apt-get
     - name: Install PostgreSQL-{{ PG_VERSION }}
       apt:
         name: "{{ 'postgresql-' + PG_VERSION | string }}"
@@ -32,13 +32,12 @@
         mode: "0700"
         recurse: yes
 
-
     - name: Stop already running service
       shell: service postgresql stop
 
     - name: Run pg_basebackup for standby1 server
       become_user: "{{ ansible_user }}"
-      shell: "export PGPASSWORD=repuserpassword; pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -C -S {{ item.PG_REPLICATION_SLOT}} -v -R -w -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -C -S {{ item.PG_REPLICATION_SLOT}} -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
       loop: "{{ STANDBY_SERVERS }}"
       when: inventory_hostname == item.NAME 
 
