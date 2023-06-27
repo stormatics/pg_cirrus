@@ -18,7 +18,7 @@ PG_CIRRUS_INSTALLATION_DIRECTORY: /xxxx/xxxx/xxxx/
 PG_PASSWORD: xxxx
 # Standby servers list name of each standby server and its replication slot
 STANDBY_SERVERS:
-  - name: STANDBY1
+  - NAME: STANDBY1
     PG_REPLICATION_SLOT: xxxx
-  - name: STANDBY2
+  - NAME: STANDBY2
     PG_REPLICATION_SLOT: xxxx

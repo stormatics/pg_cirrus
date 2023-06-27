@@ -73,7 +73,15 @@
       become_user: "{{ ansible_user }}"
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
 
-    # Create a replication user.
+    # Create a replication slots.
+    - name: Creating a replication slots
+      postgresql_query:
+        login_user: postgres
+        login_password: "{{ pfile_password }}"
+        query: "SELECT pg_create_physical_replication_slot('{{ item.PG_REPLICATION_SLOT }}');"
+      loop: "{{ STANDBY_SERVERS }}"
+
+    # Create a replication user..
     - name: Creating a replication user
       postgresql_query:
         login_user: postgres

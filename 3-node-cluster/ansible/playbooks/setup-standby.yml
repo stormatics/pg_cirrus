@@ -37,9 +37,16 @@
 
     - name: Run pg_basebackup for standby1 server
       become_user: "{{ ansible_user }}"
-      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -C -S {{ item.PG_REPLICATION_SLOT}} -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+
+    - name: Update primary_slot_name in postgresql.conf
+      become_user: "{{ ansible_user }}"
+      lineinfile:
+        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/postgresql.conf"
+        regexp: '^#?primary_slot_name.*$'
+        line: 'primary_slot_name = {{ item.PG_REPLICATION_SLOT }}'
       loop: "{{ STANDBY_SERVERS }}"
-      when: inventory_hostname == item.NAME 
+      when: inventory_hostname == item.NAME
 
     - name: Start the standby server
       become_user: "{{ ansible_user }}"
