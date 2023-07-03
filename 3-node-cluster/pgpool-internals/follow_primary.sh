@@ -41,8 +41,6 @@ if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 	exit 0
 fi
 
-echo NODE_PORT
-
 # Create a new replication slot on new primary
 echo creatig rep slot on $NEW_MAIN_NODE_HOST with the name of $SLOT_NAME
 ssh postgres@$NEW_MAIN_NODE_HOST "psql -d postgres -w -c \"SELECT pg_create_physical_replication_slot('slot_$SLOT_NAME');\""
