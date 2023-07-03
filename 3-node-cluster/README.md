@@ -92,8 +92,8 @@ REPUSER_PASSWORD: <your_replication_user_password>
 
 ### Create file to store vault password
 ```
-touch <file_name>
-chmod 0600 <file_name>
+$ touch <file_name>
+$ chmod 0600 <file_name>
 ```
 Write vault password inside this file
 
