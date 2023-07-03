@@ -49,6 +49,11 @@ Install Git
 ```
 $ sudo apt-get install git -y
 ```
+Install python3
+
+```
+$ sudo apt-get install python3 -y
+```
 Generate ssh key-pair for root user if key-pair is not already generated
 
 **NOTE**: If you have already generated public key of root user you may skip this step

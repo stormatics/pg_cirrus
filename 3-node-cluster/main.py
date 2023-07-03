@@ -112,7 +112,7 @@ def main():
   VAULT_PASSWORD_FILE = input("Ansible vault password file: ")
   # Call the function to check file conditions
   if CHECK_VAULT_PASSWORD_FILE(VAULT_PASSWORD_FILE):
-    print("All check for VAULT_PASSWORD_FILE were passed")
+    print("All checks for VAULT_PASSWORD_FILE were passed")
   else:
     print("Few security checks for VAULT_PASSWORD_FILE failed please refer to documentation for more details")
     exit(1)
