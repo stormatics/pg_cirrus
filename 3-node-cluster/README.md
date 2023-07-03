@@ -27,7 +27,7 @@ Add the following string at the end of visudo file
 ```
 postgres ALL=(ALL) NOPASSWD:ALL
 ```
-### Configure Pgpool Node
+### Configure pgpool Node
 
 Update local apt package manager
 
