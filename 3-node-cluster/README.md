@@ -16,14 +16,18 @@ Install OpenSSH Server
 ```
 $ sudo apt-get install openssh-server -y
 ```
-Create postgres user and give it sudo privileges
+Create postgres user and give it passwordless sudo privileges
 
 ```
 $ sudo adduser postgres
-$ sudo usermod -aG sudo postgres
+$ sudo visudo
 ```
+Add the following string at the end of visudo file
 
-### Configure Pgpool Node
+```
+postgres ALL=(ALL) NOPASSWD:ALL
+```
+### Configure pgpool Node
 
 Update local apt package manager
 
@@ -44,6 +48,11 @@ Install Git
 
 ```
 $ sudo apt-get install git -y
+```
+Install python3
+
+```
+$ sudo apt-get install python3 -y
 ```
 Generate ssh key-pair for root user if key-pair is not already generated
 
@@ -72,17 +81,28 @@ Go into the directory
 $ cd pg_cirrus/3-node-cluster/
 ```
  
-### Prepare hosts.yml.in file
+Create vault.yml file using Ansible vault
 
 ```
-$ mv hosts.yml.in hosts.yml
+$ ansible-vault create vault.yml
+```
+You will be prompted for vault password, after entering vault password vault file will be open.
+
+Write following lines inside vault.yml
+
+```
+PFILE_PASSWORD: <your_postgres_database_password>
+REPUSER_PASSWORD: <your_replication_user_password>
 ```
 
-**NOTE**: Replace the fields ansible_host and ansible_become with your ip addresses and passwords. You can find your ip address on primary, standby1 and standby2 hosts using ifconfig command.
-
-### Run ansible playbook
-
+Create file to store vault password
 ```
-$ sudo ansible-playbook -i hosts.yml setup.yml
+$ touch <file_name>
+$ chmod 0600 <file_name>
 ```
-Your 3-node cluster with failover must now be running smoothly 
+Write vault password inside this file
+
+### Execute pg_cirrus
+```
+$ python3 main.py
+```

@@ -2,7 +2,7 @@
 
 # follow_primary.sh
 # This script is executed by follow_primary_command parameter used by pgpool.conf file. This file gets executed on all standby nodes including new primary node as well.
-# We are updating replication properties from all standby nodes to the new primary node
+# The standby node replicated from new primary node.
 
 set -o xtrace
 
@@ -33,18 +33,20 @@ NEW_MAIN_NODE_PORT="$9"
 NEW_MAIN_NODE_PGDATA="${10}"
 OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
- 
-# Check if this script is being executed on newly promoted primary then we don't need to do anything
+SLOT_NAME=$(echo "$NODE_HOST" | tr '.' '_')
+
+# If this script being executed on primary on primary we dont need to do anything
 if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 	echo Nothing to do
 	exit 0
 fi
 
 # Create a new replication slot on new primary
-ssh postgres@$NEW_MAIN_NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_create_physical_replication_slot('sb2');\""
+ssh postgres@$NEW_MAIN_NODE_HOST "psql -d postgres -w -c \"SELECT pg_create_physical_replication_slot('slot_$SLOT_NAME');\""
 
 # Update connection string on all standby nodes to point to new primary
-ssh postgres@$NODE_HOST "echo 123 |  psql -d postgres -W -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser password=repuserpassword channel_binding=prefer host=$NEW_MAIN_NODE_HOST port=5432 sslmode=prefer sslcompression=0 sslsni=1 ssl_min_protocol_version=TLSv1.2 gssencmode=prefer krbsrvname=postgres target_session_attrs=any';\""
+ssh postgres@$NODE_HOST "psql -d postgres -w -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser host=$NEW_MAIN_NODE_HOST port=$NODE_PORT';\""
 
 # Reload connection properties
-ssh postgres@$NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_reload_conf();\""
+ssh postgres@$NODE_HOST "psql -d postgres -w -c \"SELECT pg_reload_conf();\""
+

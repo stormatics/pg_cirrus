@@ -1,0 +1,67 @@
+---
+# setup-pgpool.yml
+# This playbook configures the pgpool node on localhost.
+
+# Configure pgpool on local host
+- name: Configure pgpool2
+  hosts: localhost
+  become: true
+  tasks:
+    # Load variables inside conf.yml file
+    - name: Load common variables
+      include_vars:
+        file: ../../conf.yml
+
+    # Install pgpool using apt
+    - name: Install pgpool2
+      apt:
+        name: pgpool2
+        state: present
+
+    # Update pgpool configurations in pgpool.conf file using Ansible's replace module
+    - name: Update pgpool.conf file
+      replace:
+        path: /etc/pgpool2/pgpool.conf
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      with_items:
+        - { regexp: "#listen_addresses = 'localhost'", replace: "listen_addresses = '*'" } # Allow connections from any IP address
+        - { regexp: "#port = 5433", replace: "port = 9999" } # Change the default port number for pgpool to 9999
+        - { regexp: "#log_statement = off", replace: "log_statement = on" } # Enable statement logging
+        - { regexp: "#log_per_node_statement = off", replace: "log_per_node_statement = on" } # Enable per-node statement logging
+        - { regexp: "#sr_check_user = 'nobody'", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks
+        - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds
+        - { regexp: "#health_check_user = 'nobody'", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks
+        - { regexp: "#backend_hostname0 = 'host1'", replace: "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'" } # Set the hostname for the primary PostgreSQL node.
+        - { regexp: "#backend_hostname1 = 'host2'", replace: "backend_hostname1 = '{{ hostvars['STANDBY1']['ansible_host'] }}'" } # Set the hostname for the standby1 PostgreSQL node.
+        - { regexp: "#backend_port0 = 5432", replace: "backend_port0 = {{ PG_PORT }}" } # Sets the port for the primary PostgreSQL node.
+        - { regexp: "#backend_port1 = 5433", replace: "backend_port1 = {{ PG_PORT }}" } # Set the port for the standby1 PostgreSQL node.
+        - { regexp: "#backend_weight0 = 1", replace: "backend_weight0 = 0" } # Set the weight of the primary PostgreSQL node to 0 for load balancing.
+        - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
+        - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for primary PostgreSQL server
+        - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for standby1 PostgreSQL server
+        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }}'" } # Parameters for failover_command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S '" } # Parameters for follow_primary_command are set
+
+    # Configuration for standby2 PostgreSQL server are added to pgpool.conf file
+    - name: Insert new entry for standby2 server inside pgpool.conf file
+      lineinfile:
+        path: /etc/pgpool2/pgpool.conf
+        line: |
+          backend_hostname2 = '{{ hostvars['STANDBY2']['ansible_host'] }}' # Set the hostname for the standby2 PostgreSQL node.
+          backend_port2 = {{ PG_PORT }} # Set the port for standby2 PostgreSQL node.
+          backend_weight2 = 1 # Set the weight of standby2 PostgreSQL node to 1 for load balancing.
+          backend_data_directory2 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' # Data directory path for standby2 PostgreSQL server.
+        insertafter: EOF
+
+    # Stop already running pgpool2 service on localhost
+    - name: Stopping the already running pgpool2 service
+      service:
+        name: pgpool2
+        state: stopped
+
+    # Start pgpool2 srevice on localhost
+    - name: Start pgpool2 service
+      service:
+        name: pgpool2
+        state: started

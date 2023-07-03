@@ -1,1 +1,4 @@
-hosts.yml
+# files to ignore when committing
+inventory
+conf.yml
+vault.yml
