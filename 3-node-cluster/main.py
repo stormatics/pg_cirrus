@@ -107,7 +107,7 @@ def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
 
 # MAIN FUNCTION
 def main():
-  print("Welcome to pg_cirrus - An ultimate solution to 3 ndoe HA cluster setup\n\n")
+  print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
   VAULT_PASSWORD_FILE = input("Ansible vault password file: ")
   # Call the function to check file conditions
