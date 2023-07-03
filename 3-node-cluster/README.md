@@ -76,7 +76,7 @@ Go into the directory
 $ cd pg_cirrus/3-node-cluster/
 ```
  
-### Create vault.yml file using Ansible vaults
+Create vault.yml file using Ansible vault
 
 ```
 $ ansible-vault create vault.yml
@@ -90,7 +90,7 @@ PFILE_PASSWORD: <your_postgres_database_password>
 REPUSER_PASSWORD: <your_replication_user_password>
 ```
 
-### Create file to store vault password
+Create file to store vault password
 ```
 $ touch <file_name>
 $ chmod 0600 <file_name>
