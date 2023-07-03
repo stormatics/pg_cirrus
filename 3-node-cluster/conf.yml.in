@@ -1,0 +1,17 @@
+# conf.yml.in
+# This file contains all the variables required by pg_cirrus
+
+# PostgreSQL port
+PG_PORT: 5432
+# PostgreSQL version
+PG_VERSION: 15
+# PostgreSQL data directory path
+PG_CIRRUS_INSTALLATION_DIRECTORY: /home/postgres/stormatics/pg_cirrus/data
+# Subnet inside which 3 node cluster will be setup 
+CLUSTER_SUBNET: 192.168.48.0/24
+# Array of Standby Servers with name and replication slot values for each standby server
+STANDBY_SERVERS:
+  - NAME: STANDBY1
+    PG_REPLICATION_SLOT: slot_192_168_48_5
+  - NAME: STANDBY2
+    PG_REPLICATION_SLOT: slot_192_168_48_6

@@ -5,4 +5,3 @@
   tasks:
     - name: Install PostgreSQL
       include_tasks: ../tasks/setup-pgdg-repo.yml
-

@@ -2,40 +2,40 @@
 import subprocess
 import os
 import getpass
+import stat
+import pwd
 
 # Function to execute setup-pgdg-repo.yml playbook on localhost
 def EXECUTE_PGDG_PLAYBOOK():
-    subprocess.run(['ansible-playbook', "ansible/playbooks/setup-pgdg-repo.yml"])
+    subprocess.run(['ansible-playbook', 'ansible/playbooks/setup-pgdg-repo.yml'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    #subprocess.run(['ansible-playbook', "ansible/playbooks/setup-pgdg-repo.yml"])
 
 # Function to execute setup-primary.yml playbook on primary server
-def EXECUTE_PRIMARY_PLAYBOOK():
-    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--ask-vault-pass"])
+def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
+    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
 
 # Function to execute setup-standby.yml playbook on standby servers
-def EXECUTE_STANDBY_PLAYBOOK():
-    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml"])
+def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
+    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
 
 # Function to execute setup-pgpool.yml playbook on localhost
 def EXECUTE_PGPOOL_PLAYBOOK():
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml"])
 
-#def EXECUTE_SETUP_PFILE_PLAYBOOK():
-#    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pfile.yml"])
-
 # Function to generate inventory file at runtime
-def GENERATE_INVENTORY_FILE(PRIMARY_SSH_USERNAME, PRIMARY_IP, STANDBY_SERVERS):
+def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
     print("Generating inventory file ...")
 
     with open('inventory', 'w') as file:
-        file.write("PRIMARY ansible_host=" + PRIMARY_IP + " ansible_connection=ssh ansible_user=" + PRIMARY_SSH_USERNAME + "\n")
+        file.write("PRIMARY ansible_host=" + PRIMARY_IP + " ansible_connection=ssh ansible_user=postgres\n")
         file.write("[STANDBY]\n")
         for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
-            file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=" + SERVER['SSH_USERNAME'] + "\n")
+            file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
 # Function to generate variable file at runtime
 def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS):
-    print("Generating var_file.yml ...")
-    with open('var_file.yml', 'w') as file:
+    print("Generating conf.yml ...")
+    with open('conf.yml', 'w') as file:
         file.write('PG_PORT: ' + PG_PORT + '\n')
         file.write('PG_VERSION: ' + PG_VERSION + '\n')
         file.write('PG_CIRRUS_INSTALLATION_DIRECTORY: ' + PG_CIRRUS_INSTALLATION_DIRECTORY + '\n')
@@ -78,7 +78,7 @@ def GET_POSTGRESQL_PORT():
         return str(DEFAULT_PORT)
 
 def GET_DATA_DIRECTORY_PATH():
-    DEFAULT_PATH = "~/stormatics/pg_cirrus/data"
+    DEFAULT_PATH = "/home/postgres/stormatics/pg_cirrus/data"
     USER_PATH = input(f"Enter the Data Directory Path: (Default: {DEFAULT_PATH}): ")
 
     if USER_PATH:
@@ -86,67 +86,62 @@ def GET_DATA_DIRECTORY_PATH():
     else:
         return DEFAULT_PATH
 
-# Main python function
+def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
+    # Check if file exists
+    if not os.path.exists(FILE_PATH):
+        print(f"File '{FILE_PATH}' does not exist.")
+        return False
+
+    # Check file permissions
+    file_permissions = stat.S_IMODE(os.lstat(FILE_PATH).st_mode)
+    if file_permissions != 0o600:
+        print(f"File '{FILE_PATH}' does not have the correct permissions (0600).")
+        return False
+
+    # All conditions passed
+    return True
+
 def main():
-    print("Hello World! This is pg_cirrus\n\n")
+  print("Welcome to pg_cirrus - An ultimate solution to 3 ndoe HA cluster setup\n\n")
 
-    print("1: Seup 3 node cluster")
-    print("2: Add Standby with Primary")
-    USER_CHOICE = input("Please enter your choice: ")
-    USER_CHOICE = 1
+  VAULT_PASSWORD_FILE = input("Ansible vault password file: ")
+  # Call the function to check file conditions
+  if CHECK_VAULT_PASSWORD_FILE(VAULT_PASSWORD_FILE):
+    print("All check for VAULT_PASSWORD_FILE were passed")
+  else:
+    print("Few security checks for VAULT_PASSWORD_FILE failed please refer to documentation for more details")
+    exit(1)
 
-    if int(USER_CHOICE) == 1:
-        print("Setting up 3 node cluster")
+  print("\n")
+  print("Getting latest PostgreSQL stable version ...")
+  PG_VERSION = GET_POSTGRESQL_VERSION()
 
-        print("Please enter required information for Primary server: \n")
-        PRIMARY_SSH_USERNAME = input("Username to establish ssh connection: ")
-        PRIMARY_SSH_USERNAME = "postgres"
+  print("\n")
+  PG_PORT = GET_POSTGRESQL_PORT()
 
-        PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
-        PRIMARY_IP = "192.168.113.4"
+  print("\n")
+  PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
 
-        PG_PORT = GET_POSTGRESQL_PORT()
+  print("\n")
+  PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
 
-#        PG_VERSION = GET_POSTGRESQL_VERSION()
+  print("\n")
+  STANDBY_COUNT = 2
+  STANDBY_SERVERS = []
+  for i in range(1, STANDBY_COUNT + 1):
+    STANDBY_IP = input("Standby "+ str(i) +" IP address: ")
+    REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
+    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_"+ REPLICATION_SLOT})
 
-        PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
+  CLUSTER_SUBNET = input("\n\nSubnet address for the cluster: ")
 
-        CLUSTER_SUBNET = input("Subnet for the cluster")
-        CLUSTER_SUBNET = "192.168.113.0/24"
+#  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
+#  GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
 
-        print("\n")
-        STANDBY_COUNT = 2
-        STANDBY_SERVERS = []
-        STANDBY_SSH_USERNAME = "postgres"
-        STANDBY_IP = "192.168.113.5"
-        REPLICATION_SLOT = "sb1"
-        for i in range(1, STANDBY_COUNT + 1):
-            STANDBY_SERVERS.append({'IP': STANDBY_IP, 'SSH_USERNAME': STANDBY_SSH_USERNAME, 'REPLICATION_SLOT': REPLICATION_SLOT})
-
-            print("Please enter required information for Standby", i, "server:")
-            STANDBY_SSH_USERNAME = input("Username to establish ssh connection: ")
-            STANDBY_SSH_USERNAME = "postgres"
-
-            STANDBY_IP = input("Standby IP address: ")
-            STANDBY_IP = "192.168.113.6"
-
-            REPLICATION_SLOT = input("Replication slot name: ")
-            REPLICATION_SLOT = "sb2"
-            print("\n")
-            STANDBY_SERVERS.append({'IP': STANDBY_IP, 'SSH_USERNAME': STANDBY_SSH_USERNAME, 'REPLICATION_SLOT': REPLICATION_SLOT})
-
-#        GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
-#        GENERATE_INVENTORY_FILE(PRIMARY_SSH_USERNAME, PRIMARY_IP, STANDBY_SERVERS)
-
-#        EXECUTE_PRIMARY_PLAYBOOK()
-        EXECUTE_STANDBY_PLAYBOOK()
-#        EXECUTE_PGPOOL_PLAYBOOK()
-
-    elif int(USER_CHOICE) == 2:
-      print("Adding Standby with Primary")
-    else:
-      print("Invalid choice")
+  EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
+  EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
+  EXECUTE_PGPOOL_PLAYBOOK()
 
 if __name__ == "__main__":
-    main()
+  main()
 

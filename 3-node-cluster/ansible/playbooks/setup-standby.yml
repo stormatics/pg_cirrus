@@ -6,7 +6,11 @@
   tasks:
     - name: Load common variables
       include_vars:
-        file: ../../var_file.yml
+        file: ../../conf.yml
+
+    - name: Load vault variables
+      include_vars:
+        file: ../../vault.yml
 
     - name: Setup pgdg repo
       include_tasks: ../tasks/setup-pgdg-repo.yml
@@ -18,17 +22,17 @@
         state: present
 
     - name: Create pg_cirrus directory
-      become_user: "{{ ansible_user }}"
+      become_user: postgres
       file:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
         state: directory
 
     - name: Set permissions for data directory
-      become_user: "{{ ansible_user }}"
+      become_user: postgres
       file:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+        owner: postgres
+        group: postgres
         mode: "0700"
         recurse: yes
 
@@ -36,11 +40,11 @@
       shell: service postgresql stop
 
     - name: Run pg_basebackup for standby1 server
-      become_user: "{{ ansible_user }}"
+      become_user: postgres
       shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
 
     - name: Update primary_slot_name in postgresql.conf
-      become_user: "{{ ansible_user }}"
+      become_user: postgres
       lineinfile:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/postgresql.conf"
         regexp: '^#?primary_slot_name.*$'
@@ -49,6 +53,12 @@
       when: inventory_hostname == item.NAME
 
     - name: Start the standby server
-      become_user: "{{ ansible_user }}"
+      become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
 
+    - name: Creating pgpass file
+      become_user: postgres
+      copy:
+        dest: "~/.pgpass"
+        mode: 0600
+        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ pfile_password }}"

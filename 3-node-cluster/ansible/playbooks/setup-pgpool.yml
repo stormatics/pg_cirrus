@@ -5,7 +5,7 @@
   tasks:
     - name: Load common variables
       include_vars:
-        file: ../../var_file.yml
+        file: ../../conf.yml
 
 # Install pgpool using apt
     - name: Install pgpool2

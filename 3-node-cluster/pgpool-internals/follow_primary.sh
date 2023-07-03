@@ -33,8 +33,8 @@ NEW_MAIN_NODE_PORT="$9"
 NEW_MAIN_NODE_PGDATA="${10}"
 OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
-STANDBY_2_REPLICATION_SLOT="${13}"
- 
+SLOT_NAME=$(echo "$NODE_HOST" | tr '.' '_')
+
 # Check if this script is being executed on newly promoted primary then we don't need to do anything
 if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 	echo Nothing to do
@@ -42,10 +42,12 @@ if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 fi
 
 # Create a new replication slot on new primary
-# ssh postgres@$NEW_MAIN_NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_create_physical_replication_slot('$STANDBY_2_REPLICATION_SLOT');\""
+echo creatig rep slot on $NEW_MAIN_NODE_HOST with the name of $SLOT_NAME
+ssh postgres@$NEW_MAIN_NODE_HOST "psql -d postgres -w -c \"SELECT pg_create_physical_replication_slot('slot_$SLOT_NAME');\""
 
 # Update connection string on all standby nodes to point to new primary
-ssh postgres@$NODE_HOST "echo 123 |  psql -d postgres -W -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser password=repuser channel_binding=prefer host=$NEW_MAIN_NODE_HOST port=5432 sslmode=prefer sslcompression=0 sslsni=1 ssl_min_protocol_version=TLSv1.2 gssencmode=prefer krbsrvname=postgres target_session_attrs=any';\""
+ssh postgres@$NODE_HOST "psql -d postgres -w -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser host=$NEW_MAIN_NODE_HOST port=5432';\""
 
 # Reload connection properties
-ssh postgres@$NODE_HOST "echo 123 | psql -d postgres -W -c \"SELECT pg_reload_conf();\""
+ssh postgres@$NODE_HOST "psql -d postgres -w -c \"SELECT pg_reload_conf();\""
+

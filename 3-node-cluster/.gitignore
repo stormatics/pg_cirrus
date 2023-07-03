@@ -1,4 +1,4 @@
 # files to ignore when committing
 inventory
-var_file.yml
+conf.yml
 vault.yml
