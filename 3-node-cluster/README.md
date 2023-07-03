@@ -86,8 +86,8 @@ You will be prompted for vault password, after entering vault password vault fil
 Write following lines inside vault.yml
 
 ```
-pfile_password: <your_postgres_database_password>
-repuser_password: <your_replication_user password>
+PFILE_PASSWORD: <your_postgres_database_password>
+REPUSER_PASSWORD: <your_replication_user password>
 ```
 
 ### Create file to store vault password

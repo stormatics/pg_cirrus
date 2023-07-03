@@ -1,31 +1,34 @@
 ---
-# setup.yml
-# This is main ansible playbook it is used to configure 3-node PostgreSQL cluster with 1 primary, 2 standby and a local pgpool node.
-# Access to 3 remote nodes is required and pgpool would be configured on host where we will trigger pg_cirrus.
+# setup-primary.yml
+# This is playbook configures the primary PostgreSQL server.
 
 # Configure the PostgreSQL primary server.
 - name: Configure PostgreSQL primary server
   hosts: PRIMARY
   become: true
   tasks:
+
+    # Load variables inside conf.yml file
     - name: Load common variables
       include_vars:
         file: ../../conf.yml
 
+    # Load variables inside vault.yml
     - name: Load vault variables
       include_vars:
         file: ../../vault.yml
 
+    # Setup PGDG repository using setup-pgdg-repo.yml task
     - name: Setup pgdg repo
       include_tasks: ../tasks/setup-pgdg-repo.yml
 
-# Install the package specified in the "_PACKAGE_NAME" variable using apt-get
+    # Install the specified PostgreSQL version
     - name: Install PostgreSQL-{{ PG_VERSION }}
       apt:
         name: "{{ 'postgresql-' + PG_VERSION | string }}"
         state: present
 
-# Create a directory to store configuration files and data directory for Primary PostgreSQL server. It uses the _PG_CIRRUS_DIRECTORY variable to set the directory path.
+    # Create data directory for primary PostgreSQL server.
     - name: Creating pg_cirrus directory
       become_user: postgres
       file:
@@ -43,12 +46,13 @@
           - python3-psycopg2
         state: present
 
+    # Create .pfile with permission 0600 to store PFILE_PASSWORD value from vault.yml
     - name: Creating password file
       become_user: postgres
       copy:
         dest: "~/.pfile"
         mode: 0600
-        content: "{{ pfile_password }}"
+        content: "{{ PFILE_PASSWORD }}"
 
     # Initialize the data directory for the Primary PostgreSQL server
     - name: Initialize the data directory
@@ -73,23 +77,23 @@
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
 
-    # Create a replication slots.
+    # Create replication slots.
     - name: Creating a replication slots
       postgresql_query:
         login_user: postgres
-        login_password: "{{ pfile_password }}"
+        login_password: "{{ PFILE_PASSWORD }}"
         query: "SELECT pg_create_physical_replication_slot('{{ item.PG_REPLICATION_SLOT }}');"
       loop: "{{ STANDBY_SERVERS }}"
 
-    # Create a replication user..
+    # Create a replication user.
     - name: Creating a replication user
       postgresql_query:
         login_user: postgres
-        login_password: "{{ pfile_password }}"
-        query: "create user repuser with password '{{ repuser_password }}' replication;"
+        login_password: "{{ PFILE_PASSWORD }}"
+        query: "create user repuser with password '{{ REPUSER_PASSWORD }}' replication;"
 
     # Update the pg_hba.conf file for replication access. 
-    # Unrestricted access to the PostgreSQL server from any IP address (0.0.0.0/0) without any password or other authentication is provided.
+    # Unrestricted access to the PostgreSQL server from any IP address within the CLUSTER_SUBNET.
     - name: Update pg_hba.conf
       become_user: postgres
       lineinfile:

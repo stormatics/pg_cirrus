@@ -1,7 +1,7 @@
 ---
 # setup-pgdg-repo.yml
 # We are using this file to fetch community packages available inside PGDG repository
-# Tasks included in this file are to add PGDG repository, download PostgreSQL key, update cache using apt and install specified package
+# Tasks included in this file are to add PGDG repository, download PostgreSQL key, update cache using apt
 
 # Add the repository for PostgreSQL to the list of sources used by apt-get to install packages
 - name: Add pgdg repo to sources.list.d

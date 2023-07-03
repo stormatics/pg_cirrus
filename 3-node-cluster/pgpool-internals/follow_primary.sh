@@ -2,7 +2,7 @@
 
 # follow_primary.sh
 # This script is executed by follow_primary_command parameter used by pgpool.conf file. This file gets executed on all standby nodes including new primary node as well.
-# We are updating replication properties from all standby nodes to the new primary node
+# The standby node replicated from new primary node.
 
 set -o xtrace
 
@@ -35,14 +35,13 @@ OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
 SLOT_NAME=$(echo "$NODE_HOST" | tr '.' '_')
 
-# Check if this script is being executed on newly promoted primary then we don't need to do anything
+# If this script being executed on primary on primary we dont need to do anything
 if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 	echo Nothing to do
 	exit 0
 fi
 
 # Create a new replication slot on new primary
-echo creatig rep slot on $NEW_MAIN_NODE_HOST with the name of $SLOT_NAME
 ssh postgres@$NEW_MAIN_NODE_HOST "psql -d postgres -w -c \"SELECT pg_create_physical_replication_slot('slot_$SLOT_NAME');\""
 
 # Update connection string on all standby nodes to point to new primary

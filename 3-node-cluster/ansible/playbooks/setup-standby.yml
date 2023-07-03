@@ -1,32 +1,41 @@
-# Configure the PostgreSQL standby servers.
+---
+# setup-standby.yml
+# This playbook configures standby servers. PostgreSQL is installed on standby servers, data directory with permission 0700 is created. Replication is setup.
 
+# Configure the PostgreSQL standby servers.
 - name: Setup Standby servers
   hosts: STANDBY
   become: true
   tasks:
+
+    # Common variables from conf.yml are loaded
     - name: Load common variables
       include_vars:
         file: ../../conf.yml
 
+    # Variables from vault.yml are loaded
     - name: Load vault variables
       include_vars:
         file: ../../vault.yml
 
+    # PGDG Repository is setup using setup-pgdg-repo.yml task
     - name: Setup pgdg repo
       include_tasks: ../tasks/setup-pgdg-repo.yml
 
-    # Install the package specified in the "_PACKAGE_NAME" variable using apt-get
+    # Install the specified PostgreSQL version
     - name: Install PostgreSQL-{{ PG_VERSION }}
       apt:
         name: "{{ 'postgresql-' + PG_VERSION | string }}"
         state: present
 
+    # Create data directory on standby servers
     - name: Create pg_cirrus directory
       become_user: postgres
       file:
         path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
         state: directory
 
+    # Set permissions on data directory
     - name: Set permissions for data directory
       become_user: postgres
       file:
@@ -36,13 +45,16 @@
         mode: "0700"
         recurse: yes
 
+    # Stop already running PostgreSQL service
     - name: Stop already running service
       shell: service postgresql stop
 
-    - name: Run pg_basebackup for standby1 server
+    # Run pg_basebackup command
+    - name: Run pg_basebackup for standby servers
       become_user: postgres
       shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
 
+    # Update primary_slot_name in postgresql.conf on standby servers
     - name: Update primary_slot_name in postgresql.conf
       become_user: postgres
       lineinfile:
@@ -52,13 +64,15 @@
       loop: "{{ STANDBY_SERVERS }}"
       when: inventory_hostname == item.NAME
 
+    # Start standby servers
     - name: Start the standby server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
 
+    # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
     - name: Creating pgpass file
       become_user: postgres
       copy:
         dest: "~/.pgpass"
         mode: 0600
-        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ pfile_password }}"
+        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}"

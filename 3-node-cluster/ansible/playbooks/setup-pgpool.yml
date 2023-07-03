@@ -1,13 +1,18 @@
+---
+# setup-pgpool.yml
+# This playbook configures the pgpool node on localhost.
+
 # Configure pgpool on local host
 - name: Configure pgpool2
   hosts: localhost
   become: true
   tasks:
+    # Load variables inside conf.yml file
     - name: Load common variables
       include_vars:
         file: ../../conf.yml
 
-# Install pgpool using apt
+    # Install pgpool using apt
     - name: Install pgpool2
       apt:
         name: pgpool2

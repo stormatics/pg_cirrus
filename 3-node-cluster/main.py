@@ -1,3 +1,5 @@
+# This is the main python file to execute pg_cirru
+
 # Importing required python libraries
 import subprocess
 import os
@@ -8,7 +10,6 @@ import pwd
 # Function to execute setup-pgdg-repo.yml playbook on localhost
 def EXECUTE_PGDG_PLAYBOOK():
     subprocess.run(['ansible-playbook', 'ansible/playbooks/setup-pgdg-repo.yml'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    #subprocess.run(['ansible-playbook', "ansible/playbooks/setup-pgdg-repo.yml"])
 
 # Function to execute setup-primary.yml playbook on primary server
 def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
@@ -68,6 +69,7 @@ def GET_POSTGRESQL_VERSION():
     else:
         return LATEST_VERSION.strip()
 
+# Function to set the value of PostgreSQL port. If user enters a value that value is set as PG_PORT, if user doesn't enter a value default 5432 port is used.
 def GET_POSTGRESQL_PORT():
     DEFAULT_PORT = 5432
     USER_PORT = input(f"Enter the PostgreSQL port number: (Default: {DEFAULT_PORT}): ")
@@ -77,6 +79,7 @@ def GET_POSTGRESQL_PORT():
     else:
         return str(DEFAULT_PORT)
 
+# Function to set the path of data directory. If user enters a path that path is set as PG_CIRRUS_INSTALLATION_DIRECTORY, if user doesn't enter a path default "/home/postgres/stormatics/pg_cirrus/data" path is used.
 def GET_DATA_DIRECTORY_PATH():
     DEFAULT_PATH = "/home/postgres/stormatics/pg_cirrus/data"
     USER_PATH = input(f"Enter the Data Directory Path: (Default: {DEFAULT_PATH}): ")
@@ -86,6 +89,7 @@ def GET_DATA_DIRECTORY_PATH():
     else:
         return DEFAULT_PATH
 
+# Function to check if VAULT_PASSWORD_FILE exists and if it exists, does it have permission 0600.
 def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
     # Check if file exists
     if not os.path.exists(FILE_PATH):
@@ -101,6 +105,7 @@ def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
     # All conditions passed
     return True
 
+# MAIN FUNCTION
 def main():
   print("Welcome to pg_cirrus - An ultimate solution to 3 ndoe HA cluster setup\n\n")
 

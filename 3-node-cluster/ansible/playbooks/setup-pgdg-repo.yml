@@ -1,3 +1,7 @@
+---
+# setup-pgdg-repo.yml
+# This playbook executes the task file setup-pgdg-repo.yml to setup pgdg repository and update apt cache. This playbook is executed to get the latest PostgreSQL version in main.py
+
 # Setup pgdg repository on localhost.
 - name: Configure PostgreSQL primary server
   hosts: localhost
