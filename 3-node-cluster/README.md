@@ -66,9 +66,9 @@ Copy public key of root user on pgpool host to standby1, standby2 and primary ho
 
 ```
 $ sudo su -
-$ ssh-copy-id postgres@$PRIMARY_IP
-$ ssh-copy-id postgres@$STANDBY1_IP
-$ ssh-copy-id postgres@$STANDBY2_IP
+$ ssh-copy-id postgres@<PRIMARY_IP>
+$ ssh-copy-id postgres@<STANDBY1_IP>
+$ ssh-copy-id postgres@<STANDBY2_IP>
 ```
 Clone github repository
 
