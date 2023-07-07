@@ -34,7 +34,7 @@ NEW_MAIN_NODE_PGDATA="${10}"
 OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
 SLOT_NAME=$(echo "$NODE_HOST" | tr '.' '_')
-PG_PORT="${14}"
+PG_PORT="${13}"
 
 # If this script being executed on primary on primary we dont need to do anything
 if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
