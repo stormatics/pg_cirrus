@@ -35,6 +35,7 @@ NEW_MAIN_NODE_PGDATA="${10}"
 OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
 PG_MAJOR_VERSION="${13}"
+PG_PORT="${14}"
 
 # Promoting standby node as new primary node
-ssh postgres@$NEW_MAIN_NODE_HOST "/usr/lib/postgresql/$PG_MAJOR_VERSION/bin/pg_ctl -D $NEW_MAIN_NODE_PGDATA promote"
+ssh postgres@$NEW_MAIN_NODE_HOST "/usr/lib/postgresql/$PG_MAJOR_VERSION/bin/pg_ctl -D $NEW_MAIN_NODE_PGDATA -o '-p $PG_PORT'  promote"
