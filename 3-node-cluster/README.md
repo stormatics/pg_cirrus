@@ -104,5 +104,5 @@ Write vault password inside this file
 
 ### Execute pg_cirrus
 ```
-$ python3 main.py
+$ python3 deploy.py
 ```
