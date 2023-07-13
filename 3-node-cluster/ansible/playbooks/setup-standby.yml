@@ -52,7 +52,7 @@
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
       become_user: postgres
-      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+      shell: " export PGPASSWORD={{ REPUSER_PASSWORD }}; pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}  "
 
     # Update primary_slot_name in postgresql.conf on standby servers
     - name: Update primary_slot_name in postgresql.conf
