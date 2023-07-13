@@ -43,7 +43,7 @@ if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
 fi
 
 # Create a new replication slot on new primary
-ssh postgres@$NEW_MAIN_NODE_HOST "psql -d postgres -w -p $PG_PORT  -c \"SELECT pg_create_physical_replication_slot('slot_$SLOT_NAME');\""
+ssh postgres@$NEW_MAIN_NODE_HOST "psql -d postgres -w -p $PG_PORT -c \"SELECT pg_create_physical_replication_slot('slot_$SLOT_NAME');\""
 
 # Update connection string on all standby nodes to point to new primary
 ssh postgres@$NODE_HOST "psql -d postgres -w -p $PG_PORT -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser host=$NEW_MAIN_NODE_HOST port=$NODE_PORT';\""
