@@ -52,7 +52,7 @@
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
       become_user: postgres
-      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -p {{ PG_PORT }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
 
     # Update primary_slot_name in postgresql.conf on standby servers
     - name: Update primary_slot_name in postgresql.conf
@@ -67,7 +67,7 @@
     # Start standby servers
     - name: Start the standby server
       become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start -o "-p {{ PG_PORT }}"
 
     # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
     - name: Creating pgpass file
