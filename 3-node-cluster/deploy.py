@@ -1,4 +1,4 @@
-# This is the main python file to execute pg_cirru
+# This is the main python file to execute pg_cirrus
 
 # Importing required python libraries
 import subprocess
