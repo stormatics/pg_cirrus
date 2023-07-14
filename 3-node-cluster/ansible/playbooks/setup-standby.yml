@@ -49,6 +49,15 @@
     - name: Stop already running service
       shell: service postgresql stop
 
+    # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
+    - name: Creating pgpass file
+      become_user: postgres
+      copy:
+        dest: "~/.pgpass"
+        mode: 0600
+        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}"
+#\nlocalhost:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}
+
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
       become_user: postgres
@@ -68,11 +77,3 @@
     - name: Start the standby server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start
-
-    # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
-    - name: Creating pgpass file
-      become_user: postgres
-      copy:
-        dest: "~/.pgpass"
-        mode: 0600
-        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}"

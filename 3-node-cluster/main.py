@@ -20,8 +20,8 @@ def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
 
 # Function to execute setup-pgpool.yml playbook on localhost
-def EXECUTE_PGPOOL_PLAYBOOK():
-    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml"])
+def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
+    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
 
 # Function to generate inventory file at runtime
 def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
@@ -145,7 +145,7 @@ def main():
 
   EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
   EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
-  EXECUTE_PGPOOL_PLAYBOOK()
+  EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE)
 
 if __name__ == "__main__":
   main()

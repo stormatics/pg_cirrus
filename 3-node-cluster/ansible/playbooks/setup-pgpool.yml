@@ -12,6 +12,11 @@
       include_vars:
         file: ../../conf.yml
 
+    # Load variables inside vault.yml
+    - name: Load vault variables
+      include_vars:
+        file: ../../vault.yml
+
     # Install pgpool using apt
     - name: Install pgpool2
       apt:
@@ -32,6 +37,11 @@
         - { regexp: "#sr_check_user = 'nobody'", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks
         - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds
         - { regexp: "#health_check_user = 'nobody'", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks
+
+        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "pool_passwd = '/etc/pgpool2/pool_passwd'" } # Set location of pgpool password file
+        - { regexp: "#sr_check_password = ''", replace: "sr_check_password = ''" } # Leave streaming replication password blank
+        - { regexp: "#health_check_password = ''", replace: "health_check_password = ''" } # Leave health check password blank
+
         - { regexp: "#backend_hostname0 = 'host1'", replace: "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'" } # Set the hostname for the primary PostgreSQL node.
         - { regexp: "#backend_hostname1 = 'host2'", replace: "backend_hostname1 = '{{ hostvars['STANDBY1']['ansible_host'] }}'" } # Set the hostname for the standby1 PostgreSQL node.
         - { regexp: "#backend_port0 = 5432", replace: "backend_port0 = {{ PG_PORT }}" } # Sets the port for the primary PostgreSQL node.
@@ -52,6 +62,13 @@
           backend_port2 = {{ PG_PORT }} # Set the port for standby2 PostgreSQL node.
           backend_weight2 = 1 # Set the weight of standby2 PostgreSQL node to 1 for load balancing.
           backend_data_directory2 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' # Data directory path for standby2 PostgreSQL server.
+        insertafter: EOF
+
+    # Create a pgpool password file in /etc/pgpool2
+    - name: Create a pool_passwd file
+      lineinfile:
+        path: /etc/pgpool2/pool_passwd
+        line: repuser:{{ REPUSER_PASSWORD }}
         insertafter: EOF
 
     # Stop already running pgpool2 service on localhost
