@@ -68,7 +68,9 @@
     - name: Create a pool_passwd file
       lineinfile:
         path: /etc/pgpool2/pool_passwd
-        line: repuser:{{ REPUSER_PASSWORD }}
+        line: |
+          repuser:{{ REPUSER_PASSWORD }}
+          postgres:{{ PFILE_PASSWORD }}
         insertafter: EOF
 
     # Stop already running pgpool2 service on localhost

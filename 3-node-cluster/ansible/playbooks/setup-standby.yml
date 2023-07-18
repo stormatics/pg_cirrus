@@ -55,13 +55,12 @@
       copy:
         dest: "~/.pgpass"
         mode: 0600
-        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}"
-#\nlocalhost:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}
+        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}\n{{ hostvars['PRIMARY']['ansible_host'] }}:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}"
 
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
       become_user: postgres
-      shell: " export PGPASSWORD={{ REPUSER_PASSWORD }}; pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}  "
+      shell: " pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -U repuser -X stream -v -R -w -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}  "
 
     # Update primary_slot_name in postgresql.conf on standby servers
     - name: Update primary_slot_name in postgresql.conf
