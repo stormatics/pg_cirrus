@@ -5,22 +5,6 @@
 # The standby node replicated from new primary node.
 
 set -o xtrace
-
-# Special values:
-# 1)  %d = failed node id
-# 2)  %h = failed node hostname
-# 3)  %p = failed node port number
-# 4)  %D = failed node database cluster path
-# 5)  %m = new main node id
-# 6)  %H = new main node hostname
-# 7)  %M = old main node id
-# 8)  %P = old primary node id
-# 9)  %r = new main port number
-# 10) %R = new main database cluster path
-# 11) %N = old primary node hostname
-# 12) %S = old primary node port number
-# 13) %% = '%' character
-
 NODE_ID="$1"
 NODE_HOST="$2"
 NODE_PORT="$3"
@@ -45,7 +29,7 @@ fi
 ssh postgres@$NEW_MAIN_NODE_HOST "psql -d postgres -w -c \"SELECT pg_create_physical_replication_slot('slot_$SLOT_NAME');\""
 
 # Update connection string on all standby nodes to point to new primary
-ssh postgres@$NODE_HOST "PGPASSFILE=~/.pgpass psql -d postgres -w --set=sslmode=disable -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser host=$NEW_MAIN_NODE_HOST port=$NODE_PORT';\""
+ssh postgres@$NODE_HOST "psql -d postgres -w -c \"ALTER SYSTEM SET primary_conninfo = 'user=repuser password=repuser host=$NEW_MAIN_NODE_HOST port=$NODE_PORT';\""
 
 # Reload connection properties
 ssh postgres@$NODE_HOST "psql -d postgres -w -c \"SELECT pg_reload_conf();\""

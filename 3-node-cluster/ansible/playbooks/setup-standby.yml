@@ -55,7 +55,7 @@
       copy:
         dest: "~/.pgpass"
         mode: 0600
-        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}\n{{ hostvars['PRIMARY']['ansible_host'] }}:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}"
+        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}\n{{ hostvars['PRIMARY']['ansible_host'] }}:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}\n172.30.237.11:5432:*:repuser:repuser"
 
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
