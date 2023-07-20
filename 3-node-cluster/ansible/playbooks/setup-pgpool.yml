@@ -44,11 +44,12 @@
         - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'" } # Parameters for failover_command are set
         - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} '" } # Parameters for follow_primary_command are set
 
-    # Read the content of the pgpool.conf
-    - name: Retrieve pgpool.conf content
-      shell: cat /etc/pgpool2/pgpool.conf
+    # Check if backend_hostname2 exists in pgpool.conf
+    - name: Search for existing standby2 in pgpool.conf
+      shell: cat /etc/pgpool2/pgpool.conf | grep "backend_hostname2"
       register: PGPOOL_CONF_CONTENT
-      changed_when: false
+      ignore_errors: yes
+      failed_when: false
 
     # Configurations for standby2 PostgreSQL server are added to pgpool.conf file if they don't already exist
     - name: Add configurations for standby2 to pgpool.conf if not already present
@@ -61,7 +62,6 @@
           backend_data_directory2 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' # Data directory path for standby2 PostgreSQL server.
         insertafter: EOF
         state: present
-        regexp: '^backend_hostname2\s*='
       when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
 
     # Stop already running pgpool2 service on localhost
