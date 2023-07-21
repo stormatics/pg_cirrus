@@ -72,12 +72,30 @@ def GET_POSTGRESQL_VERSION():
 # Function to set the value of PostgreSQL port. If user enters a value that value is set as PG_PORT, if user doesn't enter a value default 5432 port is used.
 def GET_POSTGRESQL_PORT():
     DEFAULT_PORT = 5432
-    USER_PORT = input(f"Enter the PostgreSQL port number: (Default: {DEFAULT_PORT}): ")
+    INVALID_INPUTS = 0
+    MINIMUM_PORT = 1
+    MAXIMUM_PORT = 65535
+    while True:
+        USER_PORT = input(f"Enter the PostgreSQL port number: (Default: {DEFAULT_PORT}): ")
 
-    if USER_PORT:
-        return str(USER_PORT)
-    else:
-        return str(DEFAULT_PORT)
+        if USER_PORT:
+            try:
+                if not USER_PORT.isdigit():
+                    raise ValueError("Invalid input: Port should be a number.")
+                if int(USER_PORT) < MINIMUM_PORT:
+                    raise ValueError(f"Invalid input: Port number cannot be lesser than { MINIMUM_PORT }.")
+                if int(USER_PORT) > MAXIMUM_PORT:
+                    raise ValueError(f"Invalid input: Port number be greater than { MAXIMUM_PORT }.")
+            except ValueError as ERROR:
+                print(ERROR)
+                INVALID_INPUTS += 1
+                if INVALID_INPUTS >= 3:
+                    print("Too many invalid inputs. Exiting the pg_cirrus.")
+                    exit()
+            else:
+                return str(USER_PORT)
+        else:
+            return str(DEFAULT_PORT)
 
 # Function to set the path of data directory. If user enters a path that path is set as PG_CIRRUS_INSTALLATION_DIRECTORY, if user doesn't enter a path default "/home/postgres/stormatics/pg_cirrus/data" path is used.
 def GET_DATA_DIRECTORY_PATH():
