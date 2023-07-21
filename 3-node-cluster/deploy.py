@@ -87,8 +87,6 @@ def GET_POSTGRESQL_VERSION():
         else:
             return LATEST_VERSION.strip()
 
-        # If there was an error or USER_VERSION was blank, repeat the loop
-
 # Function to set the value of PostgreSQL port. If user enters a value that value is set as PG_PORT, if user doesn't enter a value default 5432 port is used.
 def GET_POSTGRESQL_PORT():
     DEFAULT_PORT = 5432
