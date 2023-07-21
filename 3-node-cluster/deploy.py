@@ -66,16 +66,16 @@ def GET_POSTGRESQL_VERSION():
     MINIMUM_SUPPORTED_VERSION = 13
     INVALID_INPUTS = 0
     while True:
-        USER_VERSION = input(f"Enter PostgreSQL version (Latest: {LATEST_VERSION}): ")
+        USER_VERSION = input(f"Enter PostgreSQL version (Latest: { LATEST_VERSION }): ")
 
         if USER_VERSION.strip():
             try:
                 if not USER_VERSION.isdigit():
                     raise ValueError("Invalid input: Version should be a number.")
                 if int(USER_VERSION) < MINIMUM_SUPPORTED_VERSION:
-                    raise ValueError("Invalid input: Version cannot be lesser than minimum supported version { MINIMUM_SUPPORTED_VERSION }.")
+                    raise ValueError(f"Invalid input: Version cannot be lesser than minimum supported version { MINIMUM_SUPPORTED_VERSION }.")
                 if int(USER_VERSION) > int(LATEST_VERSION):
-                    raise ValueError(f"Invalid input: Version cannot be greater than latest available version {LATEST_VERSION}.")
+                    raise ValueError(f"Invalid input: Version cannot be greater than latest available version { LATEST_VERSION }.")
             except ValueError as ERROR:
                 print(ERROR)
                 INVALID_INPUTS += 1
