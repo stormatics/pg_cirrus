@@ -6,6 +6,7 @@ import os
 import getpass
 import stat
 import pwd
+import ipaddress
 
 # Function to execute setup-pgdg-repo.yml playbook on localhost
 def EXECUTE_PGDG_PLAYBOOK():
@@ -105,6 +106,37 @@ def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
     # All conditions passed
     return True
 
+def VALIDATE_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
+    MAX_ATTEMPTS = 3
+    ATTEMPTS = MAX_ATTEMPTS
+
+    while ATTEMPTS > 0:
+        IP = input(PROMPT)
+        try:
+            IP_OBJ = ipaddress.ip_address(IP)
+            if IP_OBJ not in ipaddress.ip_network(SUBNET):
+                raise ValueError("Invalid IP address or not within the cluster subnet.")
+            if IP in [SERVER['IP'] for SERVER in EXISTING_IPS]:
+                raise ValueError("IP address is already added as a Primary or Standby node.")
+            if not subprocess.call(['ping', '-c', '1', IP]) == 0:
+                raise ValueError("Node is not reachable. Please check the IP address or node availability.")
+        except ValueError as ERROR:
+            print(ERROR)
+            ATTEMPTS -= 1
+            if attempts == 0:
+                print("Too many wrong entries. Exiting.")
+                exit()
+        else:
+            return IP
+
+def VALIDATE_SUBNET(SUBNET):
+    try:
+        ipaddress.ip_network(SUBNET, strict=False)
+        return SUBNET
+    except ValueError:
+        print("Invalid subnet address.")
+        exit()
+
 # MAIN FUNCTION
 def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
@@ -128,17 +160,29 @@ def main():
   PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
 
   print("\n")
-  PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
+#  PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
+
+#  print("\n")
+#  STANDBY_COUNT = 2
+#  STANDBY_SERVERS = []
+#  for i in range(1, STANDBY_COUNT + 1):
+#    STANDBY_IP = input("Standby "+ str(i) +" IP address: ")
+#    REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
+#    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_"+ REPLICATION_SLOT})
+
+#  CLUSTER_SUBNET = input("\n\nSubnet address for the cluster: ")
+  CLUSTER_SUBNET = VALIDATE_SUBNET(input("Subnet address for the cluster: "))
+
+  print("\n")
+  PRIMARY_IP = VALIDATE_IP("Primary PostgreSQL Server IP address: ", CLUSTER_SUBNET)
 
   print("\n")
   STANDBY_COUNT = 2
   STANDBY_SERVERS = []
   for i in range(1, STANDBY_COUNT + 1):
-    STANDBY_IP = input("Standby "+ str(i) +" IP address: ")
+    STANDBY_IP = VALIDATE_IP("Standby " + str(i) + " IP address: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
     REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
-    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_"+ REPLICATION_SLOT})
-
-  CLUSTER_SUBNET = input("\n\nSubnet address for the cluster: ")
+    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
 
   GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
