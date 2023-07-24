@@ -123,7 +123,7 @@ def VALIDATE_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
         except ValueError as ERROR:
             print(ERROR)
             ATTEMPTS -= 1
-            if attempts == 0:
+            if ATTEMPTS == 0:
                 print("Too many wrong entries. Exiting.")
                 exit()
         else:
@@ -160,17 +160,6 @@ def main():
   PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
 
   print("\n")
-#  PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
-
-#  print("\n")
-#  STANDBY_COUNT = 2
-#  STANDBY_SERVERS = []
-#  for i in range(1, STANDBY_COUNT + 1):
-#    STANDBY_IP = input("Standby "+ str(i) +" IP address: ")
-#    REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
-#    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_"+ REPLICATION_SLOT})
-
-#  CLUSTER_SUBNET = input("\n\nSubnet address for the cluster: ")
   CLUSTER_SUBNET = VALIDATE_SUBNET(input("Subnet address for the cluster: "))
 
   print("\n")
