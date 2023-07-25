@@ -16,25 +16,25 @@ def EXECUTE_PGDG_PLAYBOOK():
 def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
         subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as ERROR:
         print("Error: Failed to execute setup-primary.yml playbook.")
-        raise e
+        raise ERROR
 
 # Function to execute setup-standby.yml playbook on standby servers
 def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
         subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as ERROR:
         print("Error: Failed to execute setup-standby.yml playbook.")
-        raise e
+        raise ERROR
 
 # Function to execute setup-pgpool.yml playbook on localhost
 def EXECUTE_PGPOOL_PLAYBOOK():
     try:
         subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml"], check=True)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as ERROR:
         print("Error: Failed to execute setup-pgpool.yml playbook.")
-        raise e
+        raise ERROR
 
 # Function to generate inventory file at runtime
 def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
@@ -61,7 +61,7 @@ def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLU
 
 # Function to get latest PostgreSQL major version
 def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
-    
+
     EXECUTE_PGDG_PLAYBOOK()
 
     # Get the latest major version number
@@ -118,6 +118,22 @@ def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
     # All conditions passed
     return True
 
+# Function to execute all playbooks
+def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
+    try:
+        EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
+        EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
+        EXECUTE_PGPOOL_PLAYBOOK()
+    except KeyboardInterrupt:
+        print("\npg_cirrus terminated by the user.")
+        exit()
+    except subprocess.CalledProcessError:
+        print("Exiting pg_cirrus.")
+        exit()
+    except Exception as ERROR:
+        print("An unexpected error occurred. Exiting pg_cirrus.", ERROR)
+        exit()
+
 # MAIN FUNCTION
 def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
@@ -132,7 +148,7 @@ def main():
 
   print("\n")
   print("Getting latest PostgreSQL stable version ...")
-#  PG_VERSION = GET_POSTGRESQL_VERSION()
+  PG_VERSION = GET_POSTGRESQL_VERSION()
 
   print("\n")
   PG_PORT = GET_POSTGRESQL_PORT()
@@ -155,20 +171,8 @@ def main():
 
   GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
-  try:
-      EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
-      EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
-      EXECUTE_PGPOOL_PLAYBOOK()
-  except KeyboardInterrupt:
-      print("\nProgram terminated by the user.")
-      sys.exit(1)
-  except subprocess.CalledProcessError:
-      print("A playbook failed. The program will now exit.")
-      sys.exit(1)
-  except Exception as e:
-      print("An unexpected error occurred:", e)
-      sys.exit(1)
 
+  EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)
 
 if __name__ == "__main__":
   main()
