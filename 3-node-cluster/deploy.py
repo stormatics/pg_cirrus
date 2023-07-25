@@ -106,36 +106,57 @@ def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
     # All conditions passed
     return True
 
-def VALIDATE_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
-    MAX_ATTEMPTS = 3
-    ATTEMPTS = MAX_ATTEMPTS
+# Function to input only valid IP addresses
+def GET_VALID_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
+    INVALID_INPUTS = 0
 
-    while ATTEMPTS > 0:
+    while True:
         IP = input(PROMPT)
+        if not IP:
+            print("Empty input. Please enter a valid IP address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+            continue
         try:
-            IP_OBJ = ipaddress.ip_address(IP)
-            if IP_OBJ not in ipaddress.ip_network(SUBNET):
+            IP_OBJECT = ipaddress.ip_address(IP)
+            if IP_OBJECT not in ipaddress.ip_network(SUBNET):
                 raise ValueError("Invalid IP address or not within the cluster subnet.")
             if IP in [SERVER['IP'] for SERVER in EXISTING_IPS]:
                 raise ValueError("IP address is already added as a Primary or Standby node.")
-            if not subprocess.call(['ping', '-c', '1', IP]) == 0:
+            if not subprocess.call(['ping', '-c', '1', str(IP)]) == 0:
                 raise ValueError("Node is not reachable. Please check the IP address or node availability.")
         except ValueError as ERROR:
             print(ERROR)
-            ATTEMPTS -= 1
-            if ATTEMPTS == 0:
-                print("Too many wrong entries. Exiting.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
                 exit()
         else:
             return IP
 
-def VALIDATE_SUBNET(SUBNET):
-    try:
-        ipaddress.ip_network(SUBNET, strict=False)
-        return SUBNET
-    except ValueError:
-        print("Invalid subnet address.")
-        exit()
+# Function to input only valid subnet address
+def GET_VALID_SUBNET():
+    INVALID_INPUTS = 0
+    while True:
+        SUBNET = input("Enter the subnet address: ")
+        if not SUBNET:
+            print("Empty input. Please enter a valid subnet address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+            continue
+        try:
+            ipaddress.ip_network(SUBNET)
+            return SUBNET
+        except ValueError:
+            print("Invalid subnet address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
 
 # MAIN FUNCTION
 def main():
@@ -160,16 +181,16 @@ def main():
   PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
 
   print("\n")
-  CLUSTER_SUBNET = VALIDATE_SUBNET(input("Subnet address for the cluster: "))
+  CLUSTER_SUBNET = GET_VALID_SUBNET()
 
   print("\n")
-  PRIMARY_IP = VALIDATE_IP("Primary PostgreSQL Server IP address: ", CLUSTER_SUBNET)
+  PRIMARY_IP = GET_VALID_IP("Primary PostgreSQL Server IP address: ", CLUSTER_SUBNET)
 
   print("\n")
   STANDBY_COUNT = 2
   STANDBY_SERVERS = []
   for i in range(1, STANDBY_COUNT + 1):
-    STANDBY_IP = VALIDATE_IP("Standby " + str(i) + " IP address: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
+    STANDBY_IP = GET_VALID_IP("Standby " + str(i) + " IP address: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
     REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
     STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
 
