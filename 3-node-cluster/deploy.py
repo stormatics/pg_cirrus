@@ -140,7 +140,7 @@ def GET_VALID_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
 def GET_VALID_SUBNET():
     INVALID_INPUTS = 0
     while True:
-        SUBNET = input("Enter the subnet address: ")
+        SUBNET = input("Subnet address for the cluster: ")
         if not SUBNET:
             print("Empty input. Please enter a valid subnet address.")
             INVALID_INPUTS += 1
