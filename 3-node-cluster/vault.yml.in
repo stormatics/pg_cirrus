@@ -1,0 +1,7 @@
+# vault.yml.in
+# This file stores the psql and replication user passwords
+
+# The pqsl password to be stored in .pfile and .pgpass file
+PFILE_PASSWORD: xxxxxx
+# Replication user password to be stored in .pgpass file
+REPUSER_PASSWORD: xxxxxx
