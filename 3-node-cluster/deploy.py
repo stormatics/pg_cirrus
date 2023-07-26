@@ -63,11 +63,29 @@ def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
 # Function to set the value of PostgreSQL version to install. If user clicks enter latest will be selected. If user enters a number that version will be installed.
 def GET_POSTGRESQL_VERSION():
     LATEST_VERSION = GET_LATEST_POSTGRESQL_MAJOR_VERSION()
-    USER_VERSION = input(f"Enter PostgreSQL version (Latest: {LATEST_VERSION}): ")
-    if USER_VERSION.strip():
-        return USER_VERSION.strip()
-    else:
-        return LATEST_VERSION.strip()
+    MINIMUM_SUPPORTED_VERSION = 13
+    INVALID_INPUTS = 0
+    while True:
+        USER_VERSION = input(f"Enter PostgreSQL version (Latest: { LATEST_VERSION }): ")
+
+        if USER_VERSION.strip():
+            try:
+                if not USER_VERSION.isdigit():
+                    raise ValueError("Invalid input: Version should be a number.")
+                if int(USER_VERSION) < MINIMUM_SUPPORTED_VERSION:
+                    raise ValueError(f"Invalid input: Version cannot be lesser than minimum supported version { MINIMUM_SUPPORTED_VERSION }.")
+                if int(USER_VERSION) > int(LATEST_VERSION):
+                    raise ValueError(f"Invalid input: Version cannot be greater than latest available version { LATEST_VERSION }.")
+            except ValueError as ERROR:
+                print(ERROR)
+                INVALID_INPUTS += 1
+                if INVALID_INPUTS >= 3:
+                    print("Too many invalid inputs. Exiting the pg_cirrus.")
+                    exit()
+            else:
+                return USER_VERSION.strip()
+        else:
+            return LATEST_VERSION.strip()
 
 # Function to set the value of PostgreSQL port. If user enters a value that value is set as PG_PORT, if user doesn't enter a value default 5432 port is used.
 def GET_POSTGRESQL_PORT():
