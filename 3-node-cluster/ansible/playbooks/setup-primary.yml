@@ -54,10 +54,46 @@
         mode: 0600
         content: "{{ PFILE_PASSWORD }}"
 
+ #   - name: Check if the data directory is empty and display message if not
+ #     block:
+ #       - name: Check if data directory is empty
+  #        find:
+  #          paths: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+  #          file_type: directory
+  #          patterns: "*"
+  #        register: DIR_CONTENTS
+  #      - name: Initialize the data directory for the Primary PostgreSQL server
+  #        become_user: postgres
+  #        shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
+  #        when: DIR_CONTENTS.files | length == 0
+
+   #   rescue:
+   #     - name: Display message and exit if the directory is not empty
+   #       fail:
+    #        msg: "The data directory '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' is not empty."
+    #      when: DIR_CONTENTS.matched > 0  # Use 'matched' instead of 'files'
+     #  - name: Exit the playbook
+     #     meta:
+     #       end_play: true
+    # Check if data directory is empty
+    - name: Check if the data directory is empty
+      find:
+        paths: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        file_type: directory
+        patterns: "*"
+      register: DIR_CONTENTS
+
+    # Display message if PG_CIRRUS_INSTALLATION_DIRECTORY is not empty
+    - name: Display message and exit if the directory is not empty
+      fail:
+        msg: "The data directory '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' is not empty.."
+      when: DIR_CONTENTS.files | length > 0
+
     # Initialize the data directory for the Primary PostgreSQL server
-    - name: Initialize the data directory
+    - name: Initialize the data directory for the Primary PostgreSQL server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
+      when: DIR_CONTENTS.files | length == 0
 
     # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module 
     - name: Update postgresql.conf

@@ -49,10 +49,25 @@
     - name: Stop already running service
       shell: service postgresql stop
 
+    # Check if data directory is empty
+    - name: Check if the data directory is empty
+      find:
+        paths: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        file_type: directory
+        patterns: "*"
+      register: DIR_CONTENTS
+
+    # Display message if PG_CIRRUS_INSTALLATION_DIRECTORY is not empty
+    - name: Display message and exit if the directory is not empty
+      fail:
+        msg: "The data directory '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' is not empty.."
+      when: DIR_CONTENTS.files | length > 0
+
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
       become_user: postgres
       shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -p {{ PG_PORT }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+      when: DIR_CONTENTS.files | length == 0
 
     # Update primary_slot_name in postgresql.conf on standby servers
     - name: Update primary_slot_name in postgresql.conf
