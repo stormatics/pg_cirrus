@@ -125,7 +125,7 @@ def GET_VALID_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
                 raise ValueError("Invalid IP address or not within the cluster subnet.")
             if IP in [SERVER['IP'] for SERVER in EXISTING_IPS]:
                 raise ValueError("IP address is already added as a Primary or Standby node.")
-            if not subprocess.call(['ping', '-c', '1', str(IP)]) == 0:
+            if not subprocess.call(['ping', '-c', '1', str(IP)], stdout=subprocess.DEVNULL) == 0:
                 raise ValueError("Node is not reachable. Please check the IP address or node availability.")
         except ValueError as ERROR:
             print(ERROR)
