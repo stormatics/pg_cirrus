@@ -1,4 +1,4 @@
-# This is the main python file to execute pg_cirru
+# This is the main python file to execute pg_cirrus
 
 # Importing required python libraries
 import subprocess
@@ -6,6 +6,7 @@ import os
 import getpass
 import stat
 import pwd
+import sys
 
 # Function to execute setup-pgdg-repo.yml playbook on localhost
 def EXECUTE_PGDG_PLAYBOOK():
@@ -13,15 +14,27 @@ def EXECUTE_PGDG_PLAYBOOK():
 
 # Function to execute setup-primary.yml playbook on primary server
 def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
-    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
+    try:
+        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
+    except subprocess.CalledProcessError as ERROR:
+        print("Error: Failed to execute setup-primary.yml playbook.")
+        raise ERROR
 
 # Function to execute setup-standby.yml playbook on standby servers
 def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
-    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
+    try:
+        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
+    except subprocess.CalledProcessError as ERROR:
+        print("Error: Failed to execute setup-standby.yml playbook.")
+        raise ERROR
 
 # Function to execute setup-pgpool.yml playbook on localhost
 def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
+    try:
     subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
+    except subprocess.CalledProcessError as ERROR:
+        print("Error: Failed to execute setup-pgpool.yml playbook.")
+        raise ERROR
 
 # Function to generate inventory file at runtime
 def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
@@ -48,7 +61,7 @@ def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLU
 
 # Function to get latest PostgreSQL major version
 def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
-    
+
     EXECUTE_PGDG_PLAYBOOK()
 
     # Get the latest major version number
@@ -63,11 +76,29 @@ def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
 # Function to set the value of PostgreSQL version to install. If user clicks enter latest will be selected. If user enters a number that version will be installed.
 def GET_POSTGRESQL_VERSION():
     LATEST_VERSION = GET_LATEST_POSTGRESQL_MAJOR_VERSION()
-    USER_VERSION = input(f"Enter PostgreSQL version (Latest: {LATEST_VERSION}): ")
-    if USER_VERSION.strip():
-        return USER_VERSION.strip()
-    else:
-        return LATEST_VERSION.strip()
+    MINIMUM_SUPPORTED_VERSION = 13
+    INVALID_INPUTS = 0
+    while True:
+        USER_VERSION = input(f"Enter PostgreSQL version (Latest: { LATEST_VERSION }): ")
+
+        if USER_VERSION.strip():
+            try:
+                if not USER_VERSION.isdigit():
+                    raise ValueError("Invalid input: Version should be a number.")
+                if int(USER_VERSION) < MINIMUM_SUPPORTED_VERSION:
+                    raise ValueError(f"Invalid input: Version cannot be lesser than minimum supported version { MINIMUM_SUPPORTED_VERSION }.")
+                if int(USER_VERSION) > int(LATEST_VERSION):
+                    raise ValueError(f"Invalid input: Version cannot be greater than latest available version { LATEST_VERSION }.")
+            except ValueError as ERROR:
+                print(ERROR)
+                INVALID_INPUTS += 1
+                if INVALID_INPUTS >= 3:
+                    print("Too many invalid inputs. Exiting the pg_cirrus.")
+                    exit()
+            else:
+                return USER_VERSION.strip()
+        else:
+            return LATEST_VERSION.strip()
 
 # Function to set the value of PostgreSQL port. If user enters a value that value is set as PG_PORT, if user doesn't enter a value default 5432 port is used.
 def GET_POSTGRESQL_PORT():
@@ -104,6 +135,22 @@ def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
 
     # All conditions passed
     return True
+
+# Function to execute all playbooks
+def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
+    try:
+        EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
+        EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
+        EXECUTE_PGPOOL_PLAYBOOK()
+    except KeyboardInterrupt:
+        print("\npg_cirrus terminated by the user.")
+        exit()
+    except subprocess.CalledProcessError:
+        print("Exiting pg_cirrus.")
+        exit()
+    except Exception as ERROR:
+        print("An unexpected error occurred. Exiting pg_cirrus.", ERROR)
+        exit()
 
 # MAIN FUNCTION
 def main():
@@ -143,9 +190,7 @@ def main():
   GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
 
-  EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
-  EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
-  EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE)
+  EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)
 
 if __name__ == "__main__":
   main()

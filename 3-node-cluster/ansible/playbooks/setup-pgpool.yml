@@ -7,6 +7,7 @@
   hosts: localhost
   become: true
   tasks:
+
     # Load variables inside conf.yml file
     - name: Load common variables
       include_vars:
@@ -48,11 +49,18 @@
         - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for standby1 PostgreSQL server
-        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }}'" } # Parameters for failover_command are set
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S '" } # Parameters for follow_primary_command are set
+        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'" } # Parameters for failover_command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} '" } # Parameters for follow_primary_command are set
 
-    # Configuration for standby2 PostgreSQL server are added to pgpool.conf file
-    - name: Insert new entry for standby2 server inside pgpool.conf file
+    # Check if backend_hostname2 exists in pgpool.conf
+    - name: Search for existing standby2 in pgpool.conf
+      shell: cat /etc/pgpool2/pgpool.conf | grep "backend_hostname2"
+      register: PGPOOL_CONF_CONTENT
+      ignore_errors: yes
+      failed_when: false
+
+    # Configurations for standby2 PostgreSQL server are added to pgpool.conf file if they don't already exist
+    - name: Add configurations for standby2 to pgpool.conf if not already present
       lineinfile:
         path: /etc/pgpool2/pgpool.conf
         line: |
@@ -61,6 +69,8 @@
           backend_weight2 = 1 # Set the weight of standby2 PostgreSQL node to 1 for load balancing.
           backend_data_directory2 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' # Data directory path for standby2 PostgreSQL server.
         insertafter: EOF
+        state: present
+      when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
 
     # Create a pgpool password file in /etc/pgpool2
     - name: Create a pool_passwd file
