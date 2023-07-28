@@ -31,7 +31,7 @@ def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
 # Function to execute setup-pgpool.yml playbook on localhost
 def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-    subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE])
+        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
     except subprocess.CalledProcessError as ERROR:
         print("Error: Failed to execute setup-pgpool.yml playbook.")
         raise ERROR
@@ -141,7 +141,7 @@ def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
     try:
         EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
         EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
-        EXECUTE_PGPOOL_PLAYBOOK()
+        EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE)
     except KeyboardInterrupt:
         print("\npg_cirrus terminated by the user.")
         exit()
