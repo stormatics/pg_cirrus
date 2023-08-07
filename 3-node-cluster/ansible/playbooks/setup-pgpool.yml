@@ -64,6 +64,19 @@
         state: present
       when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
 
+    # Update pgpool configurations in pgpool.conf file using Ansible's replace module
+    - name: Save pgpool logs to file
+      replace:
+        path: /etc/pgpool2/pgpool.conf
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      with_items:
+        - { regexp: "#log_destination = 'stderr'", replace: "log_destination = 'stderr,syslog'" } # Log enabled and changed to stderr,syslog
+        - { regexp: "#logging_collector = off", replace: "logging_collector = on" } # Logging collector turned on
+        - { regexp: "log_directory = '/tmp/pgpool_logs'", replace: "#log_directory = '/tmp/pgpool_logs'" } # Log directory defined
+#        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-logs.log'" } # Log file name defined
+        - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600
+
     # Stop already running pgpool2 service on localhost
     - name: Stopping the already running pgpool2 service
       service:
