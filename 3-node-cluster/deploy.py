@@ -121,20 +121,29 @@ def GET_DATA_DIRECTORY_PATH():
         return DEFAULT_PATH
 
 # Function to check if VAULT_PASSWORD_FILE exists and if it exists, does it have permission 0600.
-def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
-    # Check if file exists
-    if not os.path.exists(FILE_PATH):
-        print(f"File '{FILE_PATH}' does not exist.")
-        return False
-
-    # Check file permissions
-    file_permissions = stat.S_IMODE(os.lstat(FILE_PATH).st_mode)
-    if file_permissions != 0o600:
-        print(f"File '{FILE_PATH}' does not have the correct permissions (0600).")
-        return False
-
-    # All conditions passed
-    return True
+def GET_VAULT_PASSWORD_FILE():
+    INVALID_INPUTS = 0
+    while True:
+        VAULT_PASSWORD_FILE = input(f"Ansible vault password file: ")
+        try:
+            # Check if file exists
+            if not os.path.exists(VAULT_PASSWORD_FILE):
+                raise ValueError(f"File '{VAULT_PASSWORD_FILE}' does not exist.")
+        except ValueError as ERROR:
+            print(ERROR)
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting the pg_cirrus.")
+                exit()
+        else:
+        # Check file permissions
+            FILE_PERMISSIONS = stat.S_IMODE(os.lstat(VAULT_PASSWORD_FILE).st_mode)
+            if FILE_PERMISSIONS != 0o600:
+                print(f"File '{VAULT_PASSWORD_FILE}' does not have the correct permissions (0600).")
+                exit()
+            else:
+                print("All checks for VAULT_PASSWORD_FILE were passed")
+                return VAULT_PASSWORD_FILE.strip()
 
 # Function to execute all playbooks
 def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
@@ -156,13 +165,7 @@ def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
 def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
-  VAULT_PASSWORD_FILE = input("Ansible vault password file: ")
-  # Call the function to check file conditions
-  if CHECK_VAULT_PASSWORD_FILE(VAULT_PASSWORD_FILE):
-    print("All checks for VAULT_PASSWORD_FILE were passed")
-  else:
-    print("Few security checks for VAULT_PASSWORD_FILE failed please refer to documentation for more details")
-    exit(1)
+  VAULT_PASSWORD_FILE = GET_VAULT_PASSWORD_FILE()
 
   print("\n")
   print("Getting latest PostgreSQL stable version ...")
