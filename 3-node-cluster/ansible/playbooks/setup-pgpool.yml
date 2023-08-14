@@ -46,11 +46,12 @@
         - { regexp: "#backend_port0 = 5432", replace: "backend_port0 = {{ PG_PORT }}" } # Sets the port for the primary PostgreSQL node.
         - { regexp: "#backend_port1 = 5433", replace: "backend_port1 = {{ PG_PORT }}" } # Set the port for the standby1 PostgreSQL node.
         - { regexp: "#backend_weight0 = 1", replace: "backend_weight0 = 0" } # Set the weight of the primary PostgreSQL node to 0 for load balancing.
-        - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 1" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
+        - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 0.5" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}'" } # Data directory path for standby1 PostgreSQL server
         - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'" } # Parameters for failover_command are set
         - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} '" } # Parameters for follow_primary_command are set
+        - { regexp: "#load_balance_mode = on", replace: "load_balance_mode = on" }
 
     # Check if backend_hostname2 exists in pgpool.conf
     - name: Search for existing standby2 in pgpool.conf
@@ -66,7 +67,7 @@
         line: |
           backend_hostname2 = '{{ hostvars['STANDBY2']['ansible_host'] }}' # Set the hostname for the standby2 PostgreSQL node.
           backend_port2 = {{ PG_PORT }} # Set the port for standby2 PostgreSQL node.
-          backend_weight2 = 1 # Set the weight of standby2 PostgreSQL node to 1 for load balancing.
+          backend_weight2 = 0.5 # Set the weight of standby2 PostgreSQL node to 1 for load balancing.
           backend_data_directory2 = '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' # Data directory path for standby2 PostgreSQL server.
         insertafter: EOF
         state: present
