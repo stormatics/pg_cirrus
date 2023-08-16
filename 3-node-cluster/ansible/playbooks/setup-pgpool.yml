@@ -44,6 +44,7 @@
         - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'" } # Parameters for failover_command are set
         - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} '" } # Parameters for follow_primary_command are set
         - { regexp: "#load_balance_mode = on", replace: "load_balance_mode = on" }
+        - { regexp: "#database_redirect_preference_list = ''", replace: "database_redirect_preference_list = '.*:standby'" }
 
     # Check if backend_hostname2 exists in pgpool.conf
     - name: Search for existing standby2 in pgpool.conf
