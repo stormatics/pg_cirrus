@@ -66,7 +66,7 @@
     - name: Display message and exit if the directory is not empty
       fail:
         msg: "The data directory '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' is not empty."
-      when: DIR_CONTENTS.matched > 0
+      when: DIR_CONTENTS.files | length > 0
 
     # Initialize the data directory for the Primary PostgreSQL server
     - name: Initialize the data directory for the Primary PostgreSQL server

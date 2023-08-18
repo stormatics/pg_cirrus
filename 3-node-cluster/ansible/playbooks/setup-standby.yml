@@ -61,7 +61,7 @@
     - name: Display message and exit if the directory is not empty
       fail:
         msg: "The data directory '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' is not empty."
-      when: DIR_CONTENTS.matched > 0
+      when: DIR_CONTENTS.files | length > 0
 
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
