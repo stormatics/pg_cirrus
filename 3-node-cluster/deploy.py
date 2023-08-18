@@ -6,6 +6,7 @@ import os
 import getpass
 import stat
 import pwd
+import ipaddress
 import sys
 
 # Function to execute setup-pgdg-repo.yml playbook on localhost
@@ -121,20 +122,29 @@ def GET_DATA_DIRECTORY_PATH():
         return DEFAULT_PATH
 
 # Function to check if VAULT_PASSWORD_FILE exists and if it exists, does it have permission 0600.
-def CHECK_VAULT_PASSWORD_FILE(FILE_PATH):
-    # Check if file exists
-    if not os.path.exists(FILE_PATH):
-        print(f"File '{FILE_PATH}' does not exist.")
-        return False
-
-    # Check file permissions
-    file_permissions = stat.S_IMODE(os.lstat(FILE_PATH).st_mode)
-    if file_permissions != 0o600:
-        print(f"File '{FILE_PATH}' does not have the correct permissions (0600).")
-        return False
-
-    # All conditions passed
-    return True
+def GET_VAULT_PASSWORD_FILE():
+    INVALID_INPUTS = 0
+    while True:
+        VAULT_PASSWORD_FILE = input(f"Ansible vault password file: ")
+        try:
+            # Check if file exists
+            if not os.path.exists(VAULT_PASSWORD_FILE):
+                raise ValueError(f"File '{VAULT_PASSWORD_FILE}' does not exist.")
+        except ValueError as ERROR:
+            print(ERROR)
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting the pg_cirrus.")
+                exit()
+        else:
+        # Check file permissions
+            FILE_PERMISSIONS = stat.S_IMODE(os.lstat(VAULT_PASSWORD_FILE).st_mode)
+            if FILE_PERMISSIONS != 0o600:
+                print(f"File '{VAULT_PASSWORD_FILE}' does not have the correct permissions (0600).")
+                exit()
+            else:
+                print("All checks for VAULT_PASSWORD_FILE were passed")
+                return VAULT_PASSWORD_FILE.strip()
 
 # Function to execute all playbooks
 def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
@@ -152,17 +162,63 @@ def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
         print("An unexpected error occurred. Exiting pg_cirrus.", ERROR)
         exit()
 
+# Function to input only valid IP addresses
+def GET_VALID_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
+    INVALID_INPUTS = 0
+
+    while True:
+        IP = input(PROMPT)
+        if not IP:
+            print("Empty input. Please enter a valid IP address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+            continue
+        try:
+            IP_OBJECT = ipaddress.ip_address(IP)
+            if IP_OBJECT not in ipaddress.ip_network(SUBNET):
+                raise ValueError("Invalid IP address or not within the cluster subnet.")
+            if IP in [SERVER['IP'] for SERVER in EXISTING_IPS]:
+                raise ValueError("IP address is already added as a Primary or Standby node.")
+            if not subprocess.call(['ping', '-c', '1', str(IP)], stdout=subprocess.DEVNULL) == 0:
+                raise ValueError("Node is not reachable. Please check the IP address or node availability.")
+        except ValueError as ERROR:
+            print(ERROR)
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+        else:
+            return IP
+
+# Function to input only valid subnet address
+def GET_VALID_SUBNET():
+    INVALID_INPUTS = 0
+    while True:
+        SUBNET = input("Subnet address for the cluster: ")
+        if not SUBNET:
+            print("Empty input. Please enter a valid subnet address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+            continue
+        try:
+            ipaddress.ip_network(SUBNET)
+            return SUBNET
+        except ValueError:
+            print("Invalid subnet address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+
 # MAIN FUNCTION
 def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
-  VAULT_PASSWORD_FILE = input("Ansible vault password file: ")
-  # Call the function to check file conditions
-  if CHECK_VAULT_PASSWORD_FILE(VAULT_PASSWORD_FILE):
-    print("All checks for VAULT_PASSWORD_FILE were passed")
-  else:
-    print("Few security checks for VAULT_PASSWORD_FILE failed please refer to documentation for more details")
-    exit(1)
+  VAULT_PASSWORD_FILE = GET_VAULT_PASSWORD_FILE()
 
   print("\n")
   print("Getting latest PostgreSQL stable version ...")
@@ -175,17 +231,18 @@ def main():
   PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
 
   print("\n")
-  PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
+  CLUSTER_SUBNET = GET_VALID_SUBNET()
+
+  print("\n")
+  PRIMARY_IP = GET_VALID_IP("Primary PostgreSQL Server IP address: ", CLUSTER_SUBNET)
 
   print("\n")
   STANDBY_COUNT = 2
   STANDBY_SERVERS = []
   for i in range(1, STANDBY_COUNT + 1):
-    STANDBY_IP = input("Standby "+ str(i) +" IP address: ")
+    STANDBY_IP = GET_VALID_IP("Standby " + str(i) + " IP address: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
     REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
-    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_"+ REPLICATION_SLOT})
-
-  CLUSTER_SUBNET = input("\n\nSubnet address for the cluster: ")
+    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
 
   GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
