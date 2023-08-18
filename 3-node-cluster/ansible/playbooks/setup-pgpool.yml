@@ -73,8 +73,8 @@
       with_items:
         - { regexp: "#log_destination = 'stderr'", replace: "log_destination = 'stderr,syslog'" } # Log enabled and changed to stderr,syslog
         - { regexp: "#logging_collector = off", replace: "logging_collector = on" } # Logging collector turned on
-        - { regexp: "log_directory = '/tmp/pgpool_logs'", replace: "#log_directory = '/tmp/pgpool_logs'" } # Log directory defined
-#        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-logs.log'" } # Log file name defined
+        - { regexp: "#log_directory = '/tmp/pgpool_logs'", replace: "log_directory = '/tmp/pgpool_logs'" } # Log directory defined
+        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'" } # Log file name defined
         - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600
 
     # Stop already running pgpool2 service on localhost
