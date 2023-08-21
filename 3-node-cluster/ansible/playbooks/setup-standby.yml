@@ -52,15 +52,15 @@
     # Check if data directory is empty
     - name: Check if the data directory is empty
       find:
-        paths: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        paths: "{{ INITDB_PATH }}"
         file_type: directory
         patterns: "*"
       register: DIR_CONTENTS
 
-    # Display message if PG_CIRRUS_INSTALLATION_DIRECTORY is not empty
+    # Display message if INITDB_PATH is not empty
     - name: Display message and exit if the directory is not empty
       fail:
-        msg: "The data directory '{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}' is not empty."
+        msg: "The data directory '{{ INITDB_PATH }}' is not empty."
       when: DIR_CONTENTS.files | length > 0
 
     # Run pg_basebackup command
