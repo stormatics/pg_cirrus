@@ -32,14 +32,14 @@
     - name: Create pg_cirrus directory
       become_user: postgres
       file:
-        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        path: "{{ INITDB_PATH }}"
         state: directory
 
     # Set permissions on data directory
     - name: Set permissions for data directory
       become_user: postgres
       file:
-        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        path: "{{ INITDB_PATH }}"
         owner: postgres
         group: postgres
         mode: "0700"
@@ -49,16 +49,30 @@
     - name: Stop already running service
       shell: service postgresql stop
 
+    # Check if data directory is empty
+    - name: Check if the data directory is empty
+      find:
+        paths: "{{ INITDB_PATH }}"
+        file_type: directory
+        patterns: "*"
+      register: DIR_CONTENTS
+
+    # Display message if INITDB_PATH is not empty
+    - name: Display message and exit if the directory is not empty
+      fail:
+        msg: "The data directory '{{ INITDB_PATH }}' is not empty."
+      when: DIR_CONTENTS.files | length > 0
+
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
       become_user: postgres
-      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -p {{ PG_PORT }} -U repuser -X stream -v -R -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+      shell: "pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -p {{ PG_PORT }} -U repuser -X stream -v -R -D {{ INITDB_PATH }}"
 
     # Update primary_slot_name in postgresql.conf on standby servers
     - name: Update primary_slot_name in postgresql.conf
       become_user: postgres
       lineinfile:
-        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/postgresql.conf"
+        path: "{{ INITDB_PATH }}/postgresql.conf"
         regexp: '^#?primary_slot_name.*$'
         line: 'primary_slot_name = {{ item.PG_REPLICATION_SLOT }}'
       loop: "{{ STANDBY_SERVERS }}"
@@ -67,7 +81,7 @@
     # Start standby servers
     - name: Start the standby server
       become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start -o "-p {{ PG_PORT }}"
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} start -o "-p {{ PG_PORT }}"
 
     # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
     - name: Creating pgpass file
@@ -75,4 +89,4 @@
       copy:
         dest: "~/.pgpass"
         mode: 0600
-        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}"
+        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PSQL_SERVER_PASSWORD }}"
