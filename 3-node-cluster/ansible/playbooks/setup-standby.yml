@@ -75,4 +75,4 @@
       copy:
         dest: "~/.pgpass"
         mode: 0600
-        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PFILE_PASSWORD }}"
+        content: "localhost:{{ PG_PORT }}:postgres:postgres:{{ PSQL_SERVER_PASSWORD }}"
