@@ -46,13 +46,13 @@
           - python3-psycopg2
         state: present
 
-    # Create .pfile with permission 0600 to store PFILE_PASSWORD value from vault.yml
+    # Create .pfile with permission 0600 to store PSQL_SERVER_PASSWORD value from vault.yml
     - name: Creating password file
       become_user: postgres
       copy:
         dest: "~/.pfile"
         mode: 0600
-        content: "{{ PFILE_PASSWORD }}"
+        content: "{{ PSQL_SERVER_PASSWORD }}"
 
     # Initialize the data directory for the Primary PostgreSQL server
     - name: Initialize the data directory
@@ -81,7 +81,7 @@
     - name: Creating a replication slots
       postgresql_query:
         login_user: postgres
-        login_password: "{{ PFILE_PASSWORD }}"
+        login_password: "{{ PSQL_SERVER_PASSWORD }}"
         port: "{{ PG_PORT }}"
         query: "SELECT pg_create_physical_replication_slot('{{ item.PG_REPLICATION_SLOT }}');"
       loop: "{{ STANDBY_SERVERS }}"
@@ -90,7 +90,7 @@
     - name: Creating a replication user
       postgresql_query:
         login_user: postgres
-        login_password: "{{ PFILE_PASSWORD }}"
+        login_password: "{{ PSQL_SERVER_PASSWORD }}"
         port: "{{ PG_PORT }}"
         query: "create user repuser with password '{{ REPUSER_PASSWORD }}' replication;"
 
