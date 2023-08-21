@@ -49,6 +49,20 @@
     - name: Stop already running service
       shell: service postgresql stop
 
+    # Check if data directory is empty
+    - name: Check if the data directory is empty
+      find:
+        paths: "{{ INITDB_PATH }}"
+        file_type: directory
+        patterns: "*"
+      register: DIR_CONTENTS
+
+    # Display message if INITDB_PATH is not empty
+    - name: Display message and exit if the directory is not empty
+      fail:
+        msg: "The data directory '{{ INITDB_PATH }}' is not empty."
+      when: DIR_CONTENTS.files | length > 0
+
     # Run pg_basebackup command
     - name: Run pg_basebackup for standby servers
       become_user: postgres

@@ -54,8 +54,22 @@
         mode: 0600
         content: "{{ PSQL_SERVER_PASSWORD }}"
 
+    # Check if data directory is empty
+    - name: Check if the data directory is empty
+      find:
+        paths: "{{ INITDB_PATH }}"
+        file_type: directory
+        patterns: "*"
+      register: DIR_CONTENTS
+
+    # Display message if INITDB_PATH is not empty
+    - name: Display message and exit if the directory is not empty
+      fail:
+        msg: "The data directory '{{ INITDB_PATH }}' is not empty."
+      when: DIR_CONTENTS.files | length > 0
+
     # Initialize the data directory for the Primary PostgreSQL server
-    - name: Initialize the data directory
+    - name: Initialize the data directory for the Primary PostgreSQL server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ INITDB_PATH }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
 
