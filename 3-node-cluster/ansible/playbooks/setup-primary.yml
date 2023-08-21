@@ -32,7 +32,7 @@
     - name: Creating pg_cirrus directory
       become_user: postgres
       file:
-        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}"
+        path: "{{ INITDB_PATH }}"
         state: directory
 
     # Stop the primary PostgreSQL server if it is already running.
@@ -57,13 +57,13 @@
     # Initialize the data directory for the Primary PostgreSQL server
     - name: Initialize the data directory
       become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ INITDB_PATH }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
 
     # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module 
     - name: Update postgresql.conf
       become_user: postgres
       replace:
-        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/postgresql.conf"
+        path: "{{ INITDB_PATH }}/postgresql.conf"
         regexp: "{{ item.regexp }}"
         replace: "{{ item.replace }}"
       with_items:
@@ -75,7 +75,7 @@
     # Start the Primary PostgreSQL server.
     - name: Start the server
       become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} start -o "-p {{ PG_PORT }}"
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} start -o "-p {{ PG_PORT }}"
 
     # Create replication slots.
     - name: Creating a replication slots
@@ -99,7 +99,7 @@
     - name: Update pg_hba.conf
       become_user: postgres
       lineinfile:
-        path: "{{ PG_CIRRUS_INSTALLATION_DIRECTORY }}/pg_hba.conf"
+        path: "{{ INITDB_PATH }}/pg_hba.conf"
         line: |
           host    replication     repuser     {{ CLUSTER_SUBNET }}       trust
           host    all             all         {{ CLUSTER_SUBNET }}       trust
@@ -108,4 +108,4 @@
     # Restart the primary PostgreSQL server
     - name: Restart the server
       become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ PG_CIRRUS_INSTALLATION_DIRECTORY }} restart -o "-p {{ PG_PORT }}"
+      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} restart -o "-p {{ PG_PORT }}"
