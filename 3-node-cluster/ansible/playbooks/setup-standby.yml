@@ -83,6 +83,18 @@
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} start -o "-p {{ PG_PORT }}"
 
+    # Install pgpool using apt
+    - name: Install pgpool2
+      apt:
+        name: pgpool2
+        state: present
+
+    # Stop pgpool2 service on standbys
+    - name: Stopping pgpool2 service
+      service:
+        name: pgpool2
+        state: stopped
+
     # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
     - name: Creating pgpass file
       become_user: postgres
