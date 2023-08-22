@@ -52,7 +52,7 @@
         - { regexp: "#database_redirect_preference_list = ''", replace: "database_redirect_preference_list = '.*:standby'" }
         - { regexp: "#statement_level_load_balance = off", replace: "statement_level_load_balance = on" }
         - { regexp: "#pcp_listen_addresses = 'localhost'", replace: "pcp_listen_addresses = '*'" }
-
+        - { regexp: "#pcp_port = 9898", replace: "pcp_port = 9898" }
 
     # Check if backend_hostname2 exists in pgpool.conf
     - name: Search for existing standby2 in pgpool.conf
