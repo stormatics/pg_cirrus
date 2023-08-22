@@ -107,6 +107,14 @@
         name: pgpool2
         state: stopped
 
+    # Create a .pcppass file 
+    - name: Creating pcppass file
+      become_user: postgres
+      copy:
+        dest: "~/.pcppass"
+        mode: 0600
+        content: "172.30.237.3:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
+
     # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
     - name: Creating pgpass file
       become_user: postgres
