@@ -41,11 +41,8 @@
         - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 0.5" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ INITDB_PATH }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ INITDB_PATH }}'" } # Data directory path for standby1 PostgreSQL server
-
-
         - { regexp: "#backend_flag0 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag0 = 'ALLOW_TO_FAILOVER'" }
         - { regexp: "#backend_flag1 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag1 = 'ALLOW_TO_FAILOVER'" }
-
         - { regexp: "#failover_command = ''", replace: "failover_command = 'su - postgres -c \"{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}\"'" } # Parameters for failover_command are set
         - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'su - postgres -c \" {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }}\"'" } # Parameters for follow_primary_command are set
         - { regexp: "#load_balance_mode = on", replace: "load_balance_mode = on" }
@@ -74,6 +71,10 @@
         insertafter: EOF
         state: present
       when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
+
+    - name: Add user and password to pcp.conf
+      command: |
+        sudo sh -c "echo 'postgres:'`pg_md5 {{ PSQL_SERVER_PASSWORD }}` >> /etc/pgpool2/pcp.conf"
 
     # Stop already running pgpool2 service on localhost
     - name: Stopping the already running pgpool2 service
