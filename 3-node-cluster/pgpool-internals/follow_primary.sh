@@ -51,3 +51,4 @@ ssh postgres@$NODE_HOST "psql -d postgres -w -p $PG_PORT -c \"ALTER SYSTEM SET p
 # Reload connection properties
 ssh postgres@$NODE_HOST "psql -d postgres -w -p $PG_PORT -c \"SELECT pg_reload_conf();\""
 
+ssh postgres@$NODE_HOST "pcp_attach_node -w -h 172.30.237.3 -U postgres -p 9898 -n ${NODE_ID}"
