@@ -6,6 +6,7 @@ import os
 import getpass
 import stat
 import pwd
+import ipaddress
 import sys
 
 # Function to execute setup-pgdg-repo.yml playbook on localhost
@@ -47,12 +48,12 @@ def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
             file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
 # Function to generate variable file at runtime
-def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS):
+def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS):
     print("Generating conf.yml ...")
     with open('conf.yml', 'w') as file:
         file.write('PG_PORT: ' + PG_PORT + '\n')
         file.write('PG_VERSION: ' + PG_VERSION + '\n')
-        file.write('PG_CIRRUS_INSTALLATION_DIRECTORY: ' + PG_CIRRUS_INSTALLATION_DIRECTORY + '\n')
+        file.write('INITDB_PATH: ' + INITDB_PATH + '\n')
         file.write('CLUSTER_SUBNET: '+ CLUSTER_SUBNET +'\n')
         file.write('STANDBY_SERVERS:\n')
         for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
@@ -110,7 +111,7 @@ def GET_POSTGRESQL_PORT():
     else:
         return str(DEFAULT_PORT)
 
-# Function to set the path of data directory. If user enters a path that path is set as PG_CIRRUS_INSTALLATION_DIRECTORY, if user doesn't enter a path default "/home/postgres/stormatics/pg_cirrus/data" path is used.
+# Function to set the path of data directory. If user enters a path that path is set as INITDB_PATH, if user doesn't enter a path default "/home/postgres/stormatics/pg_cirrus/data" path is used.
 def GET_DATA_DIRECTORY_PATH():
     DEFAULT_PATH = "/home/postgres/stormatics/pg_cirrus/data"
     USER_PATH = input(f"Enter the Data Directory Path: (Default: {DEFAULT_PATH}): ")
@@ -161,6 +162,58 @@ def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
         print("An unexpected error occurred. Exiting pg_cirrus.", ERROR)
         exit()
 
+# Function to input only valid IP addresses
+def GET_VALID_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
+    INVALID_INPUTS = 0
+
+    while True:
+        IP = input(PROMPT)
+        if not IP:
+            print("Empty input. Please enter a valid IP address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+            continue
+        try:
+            IP_OBJECT = ipaddress.ip_address(IP)
+            if IP_OBJECT not in ipaddress.ip_network(SUBNET):
+                raise ValueError("Invalid IP address or not within the cluster subnet.")
+            if IP in [SERVER['IP'] for SERVER in EXISTING_IPS]:
+                raise ValueError("IP address is already added as a Primary or Standby node.")
+            if not subprocess.call(['ping', '-c', '1', str(IP)], stdout=subprocess.DEVNULL) == 0:
+                raise ValueError("Node is not reachable. Please check the IP address or node availability.")
+        except ValueError as ERROR:
+            print(ERROR)
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+        else:
+            return IP
+
+# Function to input only valid subnet address
+def GET_VALID_SUBNET():
+    INVALID_INPUTS = 0
+    while True:
+        SUBNET = input("Subnet address for the cluster: ")
+        if not SUBNET:
+            print("Empty input. Please enter a valid subnet address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+            continue
+        try:
+            ipaddress.ip_network(SUBNET)
+            return SUBNET
+        except ValueError:
+            print("Invalid subnet address.")
+            INVALID_INPUTS += 1
+            if INVALID_INPUTS >= 3:
+                print("Too many invalid inputs. Exiting pg_cirrus.")
+                exit()
+
 # MAIN FUNCTION
 def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
@@ -175,22 +228,23 @@ def main():
   PG_PORT = GET_POSTGRESQL_PORT()
 
   print("\n")
-  PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
+  INITDB_PATH = GET_DATA_DIRECTORY_PATH()
 
   print("\n")
-  PRIMARY_IP = input("Primary PostgreSQL Server IP address: ")
+  CLUSTER_SUBNET = GET_VALID_SUBNET()
+
+  print("\n")
+  PRIMARY_IP = GET_VALID_IP("Primary PostgreSQL Server IP address: ", CLUSTER_SUBNET)
 
   print("\n")
   STANDBY_COUNT = 2
   STANDBY_SERVERS = []
   for i in range(1, STANDBY_COUNT + 1):
-    STANDBY_IP = input("Standby "+ str(i) +" IP address: ")
+    STANDBY_IP = GET_VALID_IP("Standby " + str(i) + " IP address: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
     REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
-    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_"+ REPLICATION_SLOT})
+    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
 
-  CLUSTER_SUBNET = input("\n\nSubnet address for the cluster: ")
-
-  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
+  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
 
   EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)

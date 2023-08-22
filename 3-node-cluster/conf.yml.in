@@ -6,7 +6,7 @@ PG_PORT: xxxx
 # PostgreSQL version
 PG_VERSION: xx
 # PostgreSQL data directory path
-PG_CIRRUS_INSTALLATION_DIRECTORY: /xxxxxx/xxxxxx/xxxxxx/
+INITDB_PATH: /xxxxxx/xxxxxx/xxxxxx/
 # Subnet inside which 3 node cluster will be setup 
 CLUSTER_SUBNET: xxx.xxx.xxx.xxx/xx
 # Array of Standby Servers with name and replication slot values for each standby server
