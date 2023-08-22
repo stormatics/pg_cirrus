@@ -72,9 +72,17 @@
         state: present
       when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
 
+    # Change owner, group and permissions of pcp.conf file
+    - name: Change permissions, owner, and group of the pcp.conf file
+      file:
+        path: /etc/pgpool2/pcp.conf
+        owner: postgres  # Set the owner to postgres
+        group: postgres  # Set the group to postgres
+        mode: "0600"  # Set the permissions to 0600
+
+    # Add postgres user and psql_server_password to pcp.conf file. Password 123 is harcoded as of now it will be fixed.
     - name: Add user and password to pcp.conf
-      command: |
-        sudo sh -c "echo 'postgres:'`pg_md5 {{ PSQL_SERVER_PASSWORD }}` >> /etc/pgpool2/pcp.conf"
+      command: sh -c "echo 'postgres:'`pg_md5 123` >> /etc/pgpool2/pcp.conf"
 
     # Stop already running pgpool2 service on localhost
     - name: Stopping the already running pgpool2 service
