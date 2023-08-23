@@ -127,7 +127,7 @@
       copy:
         dest: "~/.pcppass"
         mode: 0600
-        content: "172.30.237.3:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
+        content: "{{ PGPOOL_IP }}:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
 
     # Create a .pgpass file to store PostgreSQL password in pfil_password variable inside vault.yml
     - name: Creating pgpass file

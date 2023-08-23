@@ -35,6 +35,7 @@ OLD_PRIMARY_NODE_HOST="${11}"
 OLD_PRIMARY_NODE_PORT="${12}"
 SLOT_NAME=$(echo "$NODE_HOST" | tr '.' '_')
 PG_PORT="${13}"
+PGPOOL_IP="${14}"
 
 # If this script being executed on primary on primary we dont need to do anything
 if [[ "$NODE_HOST" == "$OLD_PRIMARY_NODE_HOST" ]]; then
@@ -52,4 +53,4 @@ ssh postgres@$NODE_HOST "PGPASSFILE=~/.pgpass psql -d postgres -w -p $PG_PORT -c
 # Reload connection properties
 ssh postgres@$NODE_HOST "psql -d postgres -w -p $PG_PORT -c \"SELECT pg_reload_conf();\""
 
-ssh postgres@$NODE_HOST "pcp_attach_node -w -h 172.30.237.3 -U postgres -p 9898 -n ${NODE_ID}"
+ssh postgres@$NODE_HOST "pcp_attach_node -w -h $PGPOOL_IP -U postgres -p 9898 -n ${NODE_ID}"
