@@ -88,9 +88,9 @@
         group: postgres  # Set the group to postgres
         mode: "0600"  # Set the permissions to 0600
 
-    # Add postgres user and psql_server_password to pcp.conf file. Password 123 is harcoded as of now it will be fixed.
+    # Add postgres user and psql_server_password to pcp.conf file
     - name: Add user and password to pcp.conf
-      command: sh -c "echo 'postgres:'`pg_md5 123` >> /etc/pgpool2/pcp.conf"
+      command: sh -c "echo 'postgres:'`pg_md5 {{ PSQL_SERVER_PASSWORD }}` >> /etc/pgpool2/pcp.conf"
 
     # Create a pgpool password file in /etc/pgpool2
     - name: Create a pool_passwd file
