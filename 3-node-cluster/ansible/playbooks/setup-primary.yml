@@ -115,8 +115,8 @@
       lineinfile:
         path: "{{ INITDB_PATH }}/pg_hba.conf"
         line: |
-          host    replication     repuser     {{ CLUSTER_SUBNET }}       trust
-          host    all             all         {{ CLUSTER_SUBNET }}       trust
+          host    replication     repuser     {{ CLUSTER_SUBNET }}       scram-sha-256
+          host    all             all         {{ CLUSTER_SUBNET }}       scram-sha-256
         insertafter: EOF
 
     # Restart the primary PostgreSQL server
