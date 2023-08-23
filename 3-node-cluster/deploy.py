@@ -48,12 +48,12 @@ def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
             file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
 # Function to generate variable file at runtime
-def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS):
+def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS):
     print("Generating conf.yml ...")
     with open('conf.yml', 'w') as file:
         file.write('PG_PORT: ' + PG_PORT + '\n')
         file.write('PG_VERSION: ' + PG_VERSION + '\n')
-        file.write('PG_CIRRUS_INSTALLATION_DIRECTORY: ' + PG_CIRRUS_INSTALLATION_DIRECTORY + '\n')
+        file.write('INITDB_PATH: ' + INITDB_PATH + '\n')
         file.write('CLUSTER_SUBNET: '+ CLUSTER_SUBNET +'\n')
         file.write('STANDBY_SERVERS:\n')
         for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
@@ -111,7 +111,7 @@ def GET_POSTGRESQL_PORT():
     else:
         return str(DEFAULT_PORT)
 
-# Function to set the path of data directory. If user enters a path that path is set as PG_CIRRUS_INSTALLATION_DIRECTORY, if user doesn't enter a path default "/home/postgres/stormatics/pg_cirrus/data" path is used.
+# Function to set the path of data directory. If user enters a path that path is set as INITDB_PATH, if user doesn't enter a path default "/home/postgres/stormatics/pg_cirrus/data" path is used.
 def GET_DATA_DIRECTORY_PATH():
     DEFAULT_PATH = "/home/postgres/stormatics/pg_cirrus/data"
     USER_PATH = input(f"Enter the Data Directory Path: (Default: {DEFAULT_PATH}): ")
@@ -228,7 +228,7 @@ def main():
   PG_PORT = GET_POSTGRESQL_PORT()
 
   print("\n")
-  PG_CIRRUS_INSTALLATION_DIRECTORY = GET_DATA_DIRECTORY_PATH()
+  INITDB_PATH = GET_DATA_DIRECTORY_PATH()
 
   print("\n")
   CLUSTER_SUBNET = GET_VALID_SUBNET()
@@ -244,7 +244,7 @@ def main():
     REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
     STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
 
-  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, PG_CIRRUS_INSTALLATION_DIRECTORY, CLUSTER_SUBNET, STANDBY_SERVERS)
+  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
 
   EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)
