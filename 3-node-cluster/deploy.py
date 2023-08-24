@@ -48,11 +48,12 @@ def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
             file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
 # Function to generate variable file at runtime
-def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS):
+def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP):
     print("Generating conf.yml ...")
     with open('conf.yml', 'w') as file:
         file.write('PG_PORT: ' + PG_PORT + '\n')
         file.write('PG_VERSION: ' + PG_VERSION + '\n')
+        file.write('PGPOOL_IP: ' + PGPOOL_IP + '\n')
         file.write('INITDB_PATH: ' + INITDB_PATH + '\n')
         file.write('CLUSTER_SUBNET: '+ CLUSTER_SUBNET +'\n')
         file.write('STANDBY_SERVERS:\n')
@@ -262,7 +263,10 @@ def main():
     REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
     STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
 
-  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS)
+  print("\n")
+  PGPOOL_IP = GET_VALID_IP("IP address of this node to setup pgpool: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
+
+  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
 
   EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)
