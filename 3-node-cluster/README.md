@@ -54,18 +54,27 @@ Install python3
 ```
 sudo apt-get install python3 -y
 ```
-Generate ssh key-pair for root user if key-pair is not already generated
-
-**NOTE**: If you have already generated public key of root user you may skip this step
+Create postgres user and give it passwordless sudo privileges
 
 ```
-sudo su -
+sudo adduser postgres
+sudo visudo
+```
+Add the following string at the end of visudo file
+
+```
+postgres ALL=(ALL) NOPASSWD:ALL
+```
+Generate ssh key-pair for postgres user if key-pair is not already generated
+
+**NOTE**: If you have already generated public key of postgres user you may skip this step
+
+```
 ssh-keygen 
 ```
-Copy public key of root user on pgpool host to standby1, standby2 and primary hosts for ssh passwordless access
+Copy public key of postgres user on pgpool host to standby1, standby2 and primary hosts for ssh passwordless access
 
 ```
-sudo su -
 ssh-copy-id postgres@<PRIMARY_IP>
 ssh-copy-id postgres@<STANDBY1_IP>
 ssh-copy-id postgres@<STANDBY2_IP>
