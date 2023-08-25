@@ -1,9 +1,9 @@
 ---
 # setup-pgdg-repo.yml
-# We are using this file to fetch community packages available inside PGDG repository
-# Tasks included in this file are to add PGDG repository, download PostgreSQL key, update cache using apt
+# We are using this file to fetch community packages available inside PGDG repository.
+# Tasks included in this file are to add PGDG repository, download PostgreSQL key and update cache using apt.
 
-# Add the repository for PostgreSQL to the list of sources used by apt-get to install packages
+# Add the repository for PostgreSQL to the list of sources used by apt-get to install packages.
 - name: Add pgdg repo to sources.list.d
   lineinfile:
     path: /etc/apt/sources.list.d/pgdg.list
@@ -16,7 +16,7 @@
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     state: present
 
-# Update the local cache of packages available in the repository, so that the latest packages can be installed
+# Update the local cache of packages available in the repository, so that the latest packages can be installed.
 - name: Update apt cache
   apt:
     update_cache: yes

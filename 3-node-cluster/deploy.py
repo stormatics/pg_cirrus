@@ -1,6 +1,7 @@
-# This is the main python file to execute pg_cirrus
+# deploy.py
+# This is the main python file to execute pg_cirrus.
 
-# Importing required python libraries
+# Importing required python libraries.
 import subprocess
 import os
 import getpass
@@ -9,11 +10,11 @@ import pwd
 import ipaddress
 import sys
 
-# Function to execute setup-pgdg-repo.yml playbook on localhost
+# Function to execute setup-pgdg-repo.yml playbook on localhost.
 def EXECUTE_PGDG_PLAYBOOK():
     subprocess.run(['ansible-playbook', 'ansible/playbooks/setup-pgdg-repo.yml'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-# Function to execute setup-primary.yml playbook on primary server
+# Function to execute setup-primary.yml playbook on primary server.
 def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
         subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
@@ -21,7 +22,7 @@ def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
         print("Error: Failed to execute setup-primary.yml playbook.")
         raise ERROR
 
-# Function to execute setup-standby.yml playbook on standby servers
+# Function to execute setup-standby.yml playbook on standby servers.
 def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
         subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
@@ -29,7 +30,7 @@ def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
         print("Error: Failed to execute setup-standby.yml playbook.")
         raise ERROR
 
-# Function to execute setup-pgpool.yml playbook on localhost
+# Function to execute setup-pgpool.yml playbook on localhost.
 def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
         subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
@@ -37,7 +38,7 @@ def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
         print("Error: Failed to execute setup-pgpool.yml playbook.")
         raise ERROR
 
-# Function to generate inventory file at runtime
+# Function to generate inventory file at runtime.
 def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
     print("Generating inventory file ...")
 
@@ -47,7 +48,7 @@ def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
         for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
             file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
-# Function to generate variable file at runtime
+# Function to generate variable file at runtime.
 def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP):
     print("Generating conf.yml ...")
     with open('conf.yml', 'w') as file:
@@ -61,17 +62,17 @@ def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_
             file.write('  - NAME: STANDBY' + str(i) + '\n')
             file.write('    PG_REPLICATION_SLOT: ' + SERVER['REPLICATION_SLOT'] + '\n')
 
-# Function to get latest PostgreSQL major version
+# Function to get latest PostgreSQL major version.
 def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
 
     EXECUTE_PGDG_PLAYBOOK()
 
-    # Get the latest major version number
+    # Get the latest major version number.
     OUTPUT = os.popen('sudo apt-cache policy postgresql').read()
 
-    # Extract the latest major version number
+    # Extract the latest major version number.
     MAJOR_VERSION = next(line.split(':')[1].strip().split('.')[0] for line in OUTPUT.split('\n') if 'Candidate' in line)
-    MAJOR_VERSION = MAJOR_VERSION.split('+')[0]  # Extract only the major number
+    MAJOR_VERSION = MAJOR_VERSION.split('+')[0]  # Extract only the major number.
 
     return MAJOR_VERSION.strip()
 
@@ -146,7 +147,7 @@ def GET_VAULT_PASSWORD_FILE():
     while True:
         VAULT_PASSWORD_FILE = input(f"Ansible vault password file: ")
         try:
-            # Check if file exists
+            # Check if file exists.
             if not os.path.exists(VAULT_PASSWORD_FILE):
                 raise ValueError(f"File '{VAULT_PASSWORD_FILE}' does not exist.")
         except ValueError as ERROR:
@@ -156,7 +157,7 @@ def GET_VAULT_PASSWORD_FILE():
                 print("Too many invalid inputs. Exiting the pg_cirrus.")
                 exit()
         else:
-        # Check file permissions
+        # Check file permissions.
             FILE_PERMISSIONS = stat.S_IMODE(os.lstat(VAULT_PASSWORD_FILE).st_mode)
             if FILE_PERMISSIONS != 0o600:
                 print(f"File '{VAULT_PASSWORD_FILE}' does not have the correct permissions (0600).")
@@ -165,7 +166,7 @@ def GET_VAULT_PASSWORD_FILE():
                 print("All checks for VAULT_PASSWORD_FILE were passed")
                 return VAULT_PASSWORD_FILE.strip()
 
-# Function to execute all playbooks
+# Function to execute all playbooks.
 def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
     try:
         EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
@@ -181,7 +182,7 @@ def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
         print("An unexpected error occurred. Exiting pg_cirrus.", ERROR)
         exit()
 
-# Function to input only valid IP addresses
+# Function to input only valid IP addresses.
 def GET_VALID_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
     INVALID_INPUTS = 0
 
@@ -211,7 +212,7 @@ def GET_VALID_IP(PROMPT, SUBNET, EXISTING_IPS=[]):
         else:
             return IP
 
-# Function to input only valid subnet address
+# Function to input only valid subnet address.
 def GET_VALID_SUBNET():
     INVALID_INPUTS = 0
     while True:
@@ -233,7 +234,7 @@ def GET_VALID_SUBNET():
                 print("Too many invalid inputs. Exiting pg_cirrus.")
                 exit()
 
-# MAIN FUNCTION
+# Main function to execute pg_cirrus.
 def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
