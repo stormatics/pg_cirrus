@@ -1,35 +1,35 @@
 ---
 # setup-primary.yml
-# This is playbook configures the primary PostgreSQL server.
+# This is playbook configures the primary PostgreSQL server
 
-# Configure the PostgreSQL primary server.
+# Configure the PostgreSQL primary server
 - name: Configure PostgreSQL primary server
   hosts: PRIMARY
   become: true
   tasks:
 
-    # Load variables inside conf.yml file.
+    # Load variables inside conf.yml file
     - name: Load common variables
       include_vars:
         file: ../../conf.yml
 
-    # Load variables inside vault.yml file.
-    - name: Load vault variables
+    # Load variables inside vault.yml
+    - name: Load variables from vault.yml
       include_vars:
         file: ../../vault.yml
 
-    # Setup PGDG repository using setup-pgdg-repo.yml task.
+    # Setup PGDG repository using setup-pgdg-repo.yml task
     - name: Setup pgdg repo
       include_tasks: ../tasks/setup-pgdg-repo.yml
 
-    # Install the specified PostgreSQL version.
+    # Install the specified PostgreSQL version
     - name: Install PostgreSQL-{{ PG_VERSION }}
       apt:
         name: "{{ 'postgresql-' + PG_VERSION | string }}"
         state: present
 
     # Create data directory for primary PostgreSQL server.
-    - name: Creating data directory
+    - name: Creating data directory on 
       become_user: postgres
       file:
         path: "{{ INITDB_PATH }}"
@@ -46,7 +46,7 @@
           - python3-psycopg2
         state: present
 
-    # Create .pfile with permission 0600 to store PSQL_SERVER_PASSWORD value from vault.yml.
+    # Create .pfile with permission 0600 to store PSQL_SERVER_PASSWORD value from vault.yml
     - name: Creating password file
       become_user: postgres
       copy:
@@ -54,7 +54,7 @@
         mode: 0600
         content: "{{ PSQL_SERVER_PASSWORD }}"
 
-    # Check if data directory is empty.
+    # Check if data directory is empty
     - name: Check if the data directory is empty
       find:
         paths: "{{ INITDB_PATH }}"
@@ -62,18 +62,18 @@
         patterns: "*"
       register: DIR_CONTENTS
 
-    # Display error message if data directory is not empty.
-    - name: Display message and exit if the data directory is not empty
+    # Display message if INITDB_PATH is not empty
+    - name: Display message and exit if the directory is not empty
       fail:
         msg: "The data directory '{{ INITDB_PATH }}' is not empty."
       when: DIR_CONTENTS.files | length > 0
 
-    # Initialize the data directory for the Primary PostgreSQL server.
+    # Initialize the data directory for the Primary PostgreSQL server
     - name: Initialize the data directory for the Primary PostgreSQL server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ INITDB_PATH }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
 
-    # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module.
+    # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module 
     - name: Update postgresql.conf
       become_user: postgres
       replace:
@@ -109,7 +109,7 @@
         query: "create user repuser with password '{{ REPUSER_PASSWORD }}' replication;"
 
     # Update the pg_hba.conf file for replication access. 
-    # Access to the PostgreSQL server from any IP address within the CLUSTER_SUBNET allowed only using PSQL_SERVER_PASSWORD.
+    # Unrestricted access to the PostgreSQL server from any IP address within the CLUSTER_SUBNET.
     - name: Update pg_hba.conf
       become_user: postgres
       lineinfile:
@@ -138,17 +138,17 @@
         group: postgres  # Set the group to postgres
         mode: "0600"  # Set the permissions to 0600
 
-    # Add postgres user and PSQL_SERVER_PASSWORD to pcp.conf file
+    # Add postgres user and psql_server_password to pcp.conf file
     - name: Add user and password to pcp.conf
       command: sh -c "echo 'postgres:'$(pg_md5 {{ PSQL_SERVER_PASSWORD }}) >> /etc/pgpool2/pcp.conf"
 
-    # Stop pgpool2 service on primary node.
+    # Stop pgpool2 service on standbys
     - name: Stopping pgpool2 service
       service:
         name: pgpool2
         state: stopped
 
-    # Create a .pcppass file.
+    # Create a .pcppass file
     - name: Creating pcppass file
       become_user: postgres
       copy:

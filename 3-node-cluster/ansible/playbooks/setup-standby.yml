@@ -8,34 +8,34 @@
   become: true
   tasks:
 
-    # Common variables from conf.yml are loaded
+    # Common variables from conf.yml are loaded.
     - name: Load common variables
       include_vars:
         file: ../../conf.yml
 
-    # Variables from vault.yml are loaded
+    # Variables from vault.yml are loaded.
     - name: Load vault variables
       include_vars:
         file: ../../vault.yml
 
-    # PGDG Repository is setup using setup-pgdg-repo.yml task
+    # PGDG Repository is setup using setup-pgdg-repo.yml task.
     - name: Setup pgdg repo
       include_tasks: ../tasks/setup-pgdg-repo.yml
 
-    # Install the specified PostgreSQL version
+    # Install the specified PostgreSQL version.
     - name: Install PostgreSQL-{{ PG_VERSION }}
       apt:
         name: "{{ 'postgresql-' + PG_VERSION | string }}"
         state: present
 
-    # Create data directory on standby servers
-    - name: Create pg_cirrus directory
+    # Create data directory on standby servers.
+    - name: Create data directory
       become_user: postgres
       file:
         path: "{{ INITDB_PATH }}"
         state: directory
 
-    # Set permissions on data directory
+    # Set permissions on data directory.
     - name: Set permissions for data directory
       become_user: postgres
       file:
@@ -45,12 +45,12 @@
         mode: "0700"
         recurse: yes
 
-    # Stop already running PostgreSQL service
+    # Stop already running PostgreSQL service.
     - name: Stop already running service
       shell: service postgresql stop
 
-    # Create a .pgpass file to store psql and repuser password in PSQL_SERVER_PASSWORD and REPUSER_PASSWORD variables inside vault.yml
-    - name: Creating pgpass file
+    # Create a .pgpass file to store psql and repuser password in PSQL_SERVER_PASSWORD and REPUSER_PASSWORD variables inside vault.yml.
+    - name: Creating .pgpass file
       become_user: postgres
       copy:
         dest: "~/.pgpass"
@@ -62,7 +62,7 @@
           {{ hostvars[STANDBYS]['ansible_host'] }}:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}
           {% endfor %}
 
-    # Check if data directory is empty
+    # Check if data directory is empty.
     - name: Check if the data directory is empty
       find:
         paths: "{{ INITDB_PATH }}"
@@ -70,19 +70,18 @@
         patterns: "*"
       register: DIR_CONTENTS
 
-    # Display message if INITDB_PATH is not empty
-    - name: Display message and exit if the directory is not empty
+    # Display error message if INITDB_PATH is not empty.
+    - name: Display error message and exit if the directory is not empty
       fail:
         msg: "The data directory '{{ INITDB_PATH }}' is not empty."
       when: DIR_CONTENTS.files | length > 0
 
-    # Run pg_basebackup command
+    # Run pg_basebackup command to setup replication.
     - name: Run pg_basebackup for standby servers
       become_user: postgres
       shell: " pg_basebackup -h {{ hostvars['PRIMARY']['ansible_host'] }} -p {{ PG_PORT }} -U repuser -X stream -v -R -w -D {{ INITDB_PATH }} "
 
-
-    # Update primary_slot_name in postgresql.conf on standby servers
+    # Update primary_slot_name in postgresql.conf on standby servers.
     - name: Update primary_slot_name in postgresql.conf
       become_user: postgres
       lineinfile:
@@ -92,18 +91,18 @@
       loop: "{{ STANDBY_SERVERS }}"
       when: inventory_hostname == item.NAME
 
-    # Start standby servers
+    # Start standby servers.
     - name: Start the standby server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} start -o "-p {{ PG_PORT }}"
 
-    # Install pgpool using apt
+    # Install pgpool using apt.
     - name: Install pgpool2
       apt:
         name: pgpool2
         state: present
 
-    # Change owner, group and permissions of pcp.conf file
+    # Change owner, group and permissions of pcp.conf file.
     - name: Change permissions, owner, and group of the pcp.conf file
       file:
         path: /etc/pgpool2/pcp.conf
@@ -111,17 +110,17 @@
         group: postgres  # Set the group to postgres
         mode: "0600"  # Set the permissions to 0600
 
-    # Add postgres user and psql_server_password to pcp.conf file
+    # Add postgres user and PSQL_SERVER_PASSWORD to pcp.conf file.
     - name: Add user and password to pcp.conf
       command: sh -c "echo 'postgres:'$(pg_md5 {{ PSQL_SERVER_PASSWORD }}) >> /etc/pgpool2/pcp.conf"
 
-    # Stop pgpool2 service on standbys
+    # Stop pgpool2 service on standbys.
     - name: Stopping pgpool2 service
       service:
         name: pgpool2
         state: stopped
 
-    # Create a .pcppass file 
+    # Create a .pcppass file.
     - name: Creating pcppass file
       become_user: postgres
       copy:
