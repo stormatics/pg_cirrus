@@ -13,6 +13,11 @@
       include_vars:
         file: ../../conf.yml
 
+    # Load variables inside vault.yml
+    - name: Load vault variables
+      include_vars:
+        file: ../../vault.yml
+
     # Install pgpool using apt
     - name: Install pgpool2
       apt:
@@ -33,6 +38,9 @@
         - { regexp: "#sr_check_user = 'nobody'", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks
         - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds
         - { regexp: "#health_check_user = 'nobody'", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks
+        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "pool_passwd = '/etc/pgpool2/pool_passwd'" } # Set location of pgpool password file
+        - { regexp: "#sr_check_password = ''", replace: "sr_check_password = ''" } # Leave streaming replication password blank
+        - { regexp: "#health_check_password = ''", replace: "health_check_password = ''" } # Leave health check password blank
         - { regexp: "#backend_hostname0 = 'host1'", replace: "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'" } # Set the hostname for the primary PostgreSQL node.
         - { regexp: "#backend_hostname1 = 'host2'", replace: "backend_hostname1 = '{{ hostvars['STANDBY1']['ansible_host'] }}'" } # Set the hostname for the standby1 PostgreSQL node.
         - { regexp: "#backend_port0 = 5432", replace: "backend_port0 = {{ PG_PORT }}" } # Sets the port for the primary PostgreSQL node.
@@ -41,9 +49,15 @@
         - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 0.5" } # Set the weight of the standby1 PostgreSQL node to 1 for load balancing.
         - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ INITDB_PATH }}'" } # Data directory path for primary PostgreSQL server
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ INITDB_PATH }}'" } # Data directory path for standby1 PostgreSQL server
+        - { regexp: "#backend_flag0 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag0 = 'ALLOW_TO_FAILOVER'" }
+        - { regexp: "#backend_flag1 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag1 = 'ALLOW_TO_FAILOVER'" }
         - { regexp: "#failover_command = ''", replace: "failover_command = 'su - postgres -c \"{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}\"'" } # Parameters for failover_command are set
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'su - postgres -c \" {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }}\"'" } # Parameters for follow_primary_command are set
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'su - postgres -c \" {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} {{ PGPOOL_IP }}\"'" } # Parameters for follow_primary_command are set
         - { regexp: "#load_balance_mode = on", replace: "load_balance_mode = on" }
+        - { regexp: "#database_redirect_preference_list = ''", replace: "database_redirect_preference_list = '.*:standby'" }
+        - { regexp: "#statement_level_load_balance = off", replace: "statement_level_load_balance = on" }
+        - { regexp: "#pcp_listen_addresses = 'localhost'", replace: "pcp_listen_addresses = '*'" }
+        - { regexp: "#pcp_port = 9898", replace: "pcp_port = 9898" }
 
     # Check if backend_hostname2 exists in pgpool.conf
     - name: Search for existing standby2 in pgpool.conf
@@ -61,6 +75,7 @@
           backend_port2 = {{ PG_PORT }} # Set the port for standby2 PostgreSQL node.
           backend_weight2 = 0.5 # Set the weight of standby2 PostgreSQL node to 1 for load balancing.
           backend_data_directory2 = '{{ INITDB_PATH }}' # Data directory path for standby2 PostgreSQL server.
+          backend_flag2 = 'ALLOW_TO_FAILOVER'
         insertafter: EOF
         state: present
       when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
@@ -77,6 +92,27 @@
         - { regexp: "#log_directory = '/tmp/pgpool_logs'", replace: "log_directory = '/tmp/pgpool_logs'" } # Log directory defined
         - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'" } # Log file name defined
         - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600
+        
+    # Change owner, group and permissions of pcp.conf file
+    - name: Change permissions, owner, and group of the pcp.conf file
+      file:
+        path: /etc/pgpool2/pcp.conf
+        owner: postgres  # Set the owner to postgres
+        group: postgres  # Set the group to postgres
+        mode: "0600"  # Set the permissions to 0600
+
+    # Add postgres user and psql_server_password to pcp.conf file
+    - name: Add user and password to pcp.conf
+      command: sh -c "echo 'postgres:'`pg_md5 {{ PSQL_SERVER_PASSWORD }}` >> /etc/pgpool2/pcp.conf"
+
+    # Create a pgpool password file in /etc/pgpool2
+    - name: Create a pool_passwd file
+      lineinfile:
+        path: /etc/pgpool2/pool_passwd
+        line: |
+          repuser:{{ REPUSER_PASSWORD }}
+          postgres:{{ PSQL_SERVER_PASSWORD }}
+        insertafter: EOF
 
     # Stop already running pgpool2 service on localhost
     - name: Stopping the already running pgpool2 service

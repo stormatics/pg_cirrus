@@ -30,9 +30,9 @@ def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
         raise ERROR
 
 # Function to execute setup-pgpool.yml playbook on localhost
-def EXECUTE_PGPOOL_PLAYBOOK():
+def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml"], check=True)
+        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
     except subprocess.CalledProcessError as ERROR:
         print("Error: Failed to execute setup-pgpool.yml playbook.")
         raise ERROR
@@ -48,11 +48,12 @@ def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
             file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
 # Function to generate variable file at runtime
-def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS):
+def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP):
     print("Generating conf.yml ...")
     with open('conf.yml', 'w') as file:
         file.write('PG_PORT: ' + PG_PORT + '\n')
         file.write('PG_VERSION: ' + PG_VERSION + '\n')
+        file.write('PGPOOL_IP: ' + PGPOOL_IP + '\n')
         file.write('INITDB_PATH: ' + INITDB_PATH + '\n')
         file.write('CLUSTER_SUBNET: '+ CLUSTER_SUBNET +'\n')
         file.write('STANDBY_SERVERS:\n')
@@ -104,12 +105,30 @@ def GET_POSTGRESQL_VERSION():
 # Function to set the value of PostgreSQL port. If user enters a value that value is set as PG_PORT, if user doesn't enter a value default 5432 port is used.
 def GET_POSTGRESQL_PORT():
     DEFAULT_PORT = 5432
-    USER_PORT = input(f"Enter the PostgreSQL port number: (Default: {DEFAULT_PORT}): ")
+    INVALID_INPUTS = 0
+    MINIMUM_PORT = 1
+    MAXIMUM_PORT = 65535
+    while True:
+        USER_PORT = input(f"Enter the PostgreSQL port number: (Default: {DEFAULT_PORT}): ")
 
-    if USER_PORT:
-        return str(USER_PORT)
-    else:
-        return str(DEFAULT_PORT)
+        if USER_PORT:
+            try:
+                if not USER_PORT.isdigit():
+                    raise ValueError("Invalid input: Port should be a number.")
+                if int(USER_PORT) < MINIMUM_PORT:
+                    raise ValueError(f"Invalid input: Port number cannot be lesser than { MINIMUM_PORT }.")
+                if int(USER_PORT) > MAXIMUM_PORT:
+                    raise ValueError(f"Invalid input: Port number be greater than { MAXIMUM_PORT }.")
+            except ValueError as ERROR:
+                print(ERROR)
+                INVALID_INPUTS += 1
+                if INVALID_INPUTS >= 3:
+                    print("Too many invalid inputs. Exiting the pg_cirrus.")
+                    exit()
+            else:
+                return str(USER_PORT)
+        else:
+            return str(DEFAULT_PORT)
 
 # Function to set the path of data directory. If user enters a path that path is set as INITDB_PATH, if user doesn't enter a path default "/home/postgres/stormatics/pg_cirrus/data" path is used.
 def GET_DATA_DIRECTORY_PATH():
@@ -151,7 +170,7 @@ def EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE):
     try:
         EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE)
         EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE)
-        EXECUTE_PGPOOL_PLAYBOOK()
+        EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE)
     except KeyboardInterrupt:
         print("\npg_cirrus terminated by the user.")
         exit()
@@ -244,7 +263,10 @@ def main():
     REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
     STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
 
-  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS)
+  print("\n")
+  PGPOOL_IP = GET_VALID_IP("IP address of this node to setup pgpool: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
+
+  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
 
   EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)

@@ -115,11 +115,43 @@
       lineinfile:
         path: "{{ INITDB_PATH }}/pg_hba.conf"
         line: |
-          host    replication     repuser     {{ CLUSTER_SUBNET }}       trust
-          host    all             all         {{ CLUSTER_SUBNET }}       trust
+          host    replication     repuser     {{ CLUSTER_SUBNET }}       scram-sha-256
+          host    all             all         {{ CLUSTER_SUBNET }}       scram-sha-256
         insertafter: EOF
 
     # Restart the primary PostgreSQL server
     - name: Restart the server
       become_user: postgres
       shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} restart -o "-p {{ PG_PORT }}"
+
+    # Install pgpool using apt
+    - name: Install pgpool2
+      apt:
+        name: pgpool2
+        state: present
+
+    # Change owner, group and permissions of pcp.conf file
+    - name: Change permissions, owner, and group of the pcp.conf file
+      file:
+        path: /etc/pgpool2/pcp.conf
+        owner: postgres  # Set the owner to postgres
+        group: postgres  # Set the group to postgres
+        mode: "0600"  # Set the permissions to 0600
+
+    # Add postgres user and psql_server_password to pcp.conf file
+    - name: Add user and password to pcp.conf
+      command: sh -c "echo 'postgres:'$(pg_md5 {{ PSQL_SERVER_PASSWORD }}) >> /etc/pgpool2/pcp.conf"
+
+    # Stop pgpool2 service on standbys
+    - name: Stopping pgpool2 service
+      service:
+        name: pgpool2
+        state: stopped
+
+    # Create a .pcppass file
+    - name: Creating pcppass file
+      become_user: postgres
+      copy:
+        dest: "~/.pcppass"
+        mode: 0600
+        content: "{{ PGPOOL_IP }}:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
