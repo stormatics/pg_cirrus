@@ -1,15 +1,17 @@
 # conf.yml.in
-# This file contains all the variables required by pg_cirrus
+# This file contains all the variables required by pg_cirrus.
 
-# PostgreSQL port
+# PostgreSQL port.
 PG_PORT: xxxx
-# PostgreSQL version
+# PostgreSQL version.
 PG_VERSION: xx
-# PostgreSQL data directory path
+# IP address of current node on which pgpool will be setup.
+PGPOOL_IP: xxx.xxx.xxx.xxx
+# PostgreSQL data directory path.
 INITDB_PATH: /xxxxxx/xxxxxx/xxxxxx/
-# Subnet inside which 3 node cluster will be setup 
+# Subnet inside which 3 node cluster will be setup.
 CLUSTER_SUBNET: xxx.xxx.xxx.xxx/xx
-# Array of Standby Servers with name and replication slot values for each standby server
+# Array of Standby Servers with name and replication slot values for each standby server.
 STANDBY_SERVERS:
   - NAME: STANDBY1
     PG_REPLICATION_SLOT: slot_xxx_xxx_xxx_xxx
