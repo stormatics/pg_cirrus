@@ -51,8 +51,8 @@
         - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ INITDB_PATH }}'" } # Data directory path for standby1 PostgreSQL server.
         - { regexp: "#backend_flag0 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag0 = 'ALLOW_TO_FAILOVER'" } # Set backend_flag0 to ALLOW_TO_FAILOVER.
         - { regexp: "#backend_flag1 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag1 = 'ALLOW_TO_FAILOVER'" } # Set backend_flag1 to ALLOW_TO_FAILOVER.
-        - { regexp: "#failover_command = ''", replace: "failover_command = 'sudo su - postgres -c \"{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}\"'" } # Parameters for failover_command are set.
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = 'sudo su - postgres -c \" {{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} {{ PGPOOL_IP }}\"'" } # Parameters for follow_primary_command are set.
+        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'" } # Parameters for failover_command are set.
+        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = '{{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} {{ PGPOOL_IP }}'" } # Parameters for follow_primary_command are set.
         - { regexp: "#load_balance_mode = on", replace: "load_balance_mode = on" } # Turn load_balance_mode to on.
         - { regexp: "#database_redirect_preference_list = ''", replace: "database_redirect_preference_list = '.*:standby'" } # Set database_redirect_preference_list value to .*:standby .
         - { regexp: "#statement_level_load_balance = off", replace: "statement_level_load_balance = on" } # Turn statement_level_load_balance on.
