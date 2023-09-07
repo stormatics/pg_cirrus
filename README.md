@@ -1,5 +1,5 @@
 # pg_cirrus - Hassle-free PostgreSQL Cluster Setup
-pg_cirrus is a solution for setting up a 3-node highly available PostgreSQL cluster on Linux operating systems. Currently, it only supports Ubuntu, however support for other Linux flavors is on the roadmap
+pg_cirrus is a solution for setting up a 3-node highly available PostgreSQL cluster on Linux operating systems. Currently, it only supports Ubuntu, however support for other Linux flavors is on the roadmap.
 
 Main technologies used are PostgreSQL, Python and Ansible.
 
