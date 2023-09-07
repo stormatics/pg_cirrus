@@ -24,7 +24,7 @@
         name: pgpool2
         state: present
 
-    # Create pgpool_logs directory in /var/log/
+    # Create pgpool_logs directory in /var/log/ .
     - name: Create pgpool_logs directory in /var/log/
       file:
         path: /var/log/pgpool_logs
@@ -67,11 +67,11 @@
         - { regexp: "#statement_level_load_balance = off", replace: "statement_level_load_balance = on" } # Turn statement_level_load_balance on.
         - { regexp: "#pcp_listen_addresses = 'localhost'", replace: "pcp_listen_addresses = '*'" } # Set pcp_listen_address to * .
         - { regexp: "#pcp_port = 9898", replace: "pcp_port = 9898" } # Set pcp_port to 9898.
-        - { regexp: "#log_destination = 'stderr'", replace: "log_destination = 'stderr,syslog'" } # Log enabled and changed to stderr,syslog
-        - { regexp: "#logging_collector = off", replace: "logging_collector = on" } # Logging collector turned on
-        - { regexp: "#log_directory = '/tmp/pgpool_logs'", replace: "log_directory = '/var/log/pgpool_logs'" } # Log directory defined
-        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'" } # Log file name defined
-        - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600
+        - { regexp: "#log_destination = 'stderr'", replace: "log_destination = 'stderr,syslog'" } # Log enabled and changed to stderr,syslog.
+        - { regexp: "#logging_collector = off", replace: "logging_collector = on" } # Logging collector turned on.
+        - { regexp: "#log_directory = '/tmp/pgpool_logs'", replace: "log_directory = '/var/log/pgpool_logs'" } # Log directory defined.
+        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'" } # Log file name defined.
+        - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600.
 
     # Check if backend_hostname2 exists in pgpool.conf.
     - name: Search for existing standby2 in pgpool.conf
@@ -94,7 +94,7 @@
         state: present
       when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
 
-    # Change owner, group and permissions of pcp.conf file
+    # Change owner, group and permissions of pcp.conf file.
     - name: Change permissions, owner, and group of the pcp.conf file
       file:
         path: /etc/pgpool2/pcp.conf
