@@ -24,6 +24,15 @@
         name: pgpool2
         state: present
 
+    # Create pgpool_logs directory in /var/log/
+    - name: Create pgpool_logs directory in /var/log/
+      file:
+        path: /var/log/pgpool_logs
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0700'
+
     # Update pgpool configurations in pgpool.conf file using Ansible's replace module.
     - name: Update pgpool.conf file
       replace:
@@ -58,6 +67,11 @@
         - { regexp: "#statement_level_load_balance = off", replace: "statement_level_load_balance = on" } # Turn statement_level_load_balance on.
         - { regexp: "#pcp_listen_addresses = 'localhost'", replace: "pcp_listen_addresses = '*'" } # Set pcp_listen_address to * .
         - { regexp: "#pcp_port = 9898", replace: "pcp_port = 9898" } # Set pcp_port to 9898.
+        - { regexp: "#log_destination = 'stderr'", replace: "log_destination = 'stderr,syslog'" } # Log enabled and changed to stderr,syslog
+        - { regexp: "#logging_collector = off", replace: "logging_collector = on" } # Logging collector turned on
+        - { regexp: "#log_directory = '/tmp/pgpool_logs'", replace: "log_directory = '/var/log/pgpool_logs'" } # Log directory defined
+        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'" } # Log file name defined
+        - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600
 
     # Check if backend_hostname2 exists in pgpool.conf.
     - name: Search for existing standby2 in pgpool.conf
@@ -79,28 +93,6 @@
         insertafter: EOF
         state: present
       when: "'backend_hostname2' not in PGPOOL_CONF_CONTENT.stdout"
-
-    # Create pgpool_logs directory in /var/log/
-    - name: Create pgpool_logs directory in /var/log/
-      file:
-        path: /var/log/pgpool_logs
-        state: directory
-        owner: postgres
-        group: postgres
-        mode: '0700'
-
-    # Update pgpool configurations in pgpool.conf file to save pgpool logs to /var/log/pgpool_logs
-    - name: Save pgpool logs to file
-      replace:
-        path: /etc/pgpool2/pgpool.conf
-        regexp: "{{ item.regexp }}"
-        replace: "{{ item.replace }}"
-      with_items:
-        - { regexp: "#log_destination = 'stderr'", replace: "log_destination = 'stderr,syslog'" } # Log enabled and changed to stderr,syslog
-        - { regexp: "#logging_collector = off", replace: "logging_collector = on" } # Logging collector turned on
-        - { regexp: "#log_directory = '/tmp/pgpool_logs'", replace: "log_directory = '/var/log/pgpool_logs'" } # Log directory defined
-        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'" } # Log file name defined
-        - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600
 
     # Change owner, group and permissions of pcp.conf file
     - name: Change permissions, owner, and group of the pcp.conf file
