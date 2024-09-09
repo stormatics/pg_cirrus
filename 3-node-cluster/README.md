@@ -24,7 +24,7 @@ Add the following string at the end of visudo file
 ```
 postgres ALL=(ALL) NOPASSWD:ALL
 ```
-For EC2 get your id_rsa.pub of postgres user on pg_cirrus node and run the following command on primary, standby1 and standby2 nodes
+For AWS/EC2 get your id_rsa.pub of postgres user on pg_cirrus node and run the following command on primary, standby1 and standby2 nodes
 ```
 mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 ```
@@ -55,14 +55,18 @@ Add the following string at the end of visudo file
 ```
 postgres ALL=(ALL) NOPASSWD:ALL
 ```
-Generate ssh key-pair for postgres user if key-pair is not already generated
+Switch to postgres user
+```
+sudo su postgres 
+```
+Generate ssh key-pair if key-pair is not already generated
 
 **NOTE**: If you have already generated public key of postgres user you may skip this step
 
 ```
 ssh-keygen -t rsa
 ```
-Copy public key of postgres user on pgpool host to standby1, standby2 and primary hosts for ssh passwordless access
+Copy the public key of postgres user on pgpool host to standby1, standby2 and primary hosts for ssh passwordless access (For AWS/EC@ refer to above Configure Primary, Standby1 and Standby2 Nodes section)
 
 ```
 ssh-copy-id postgres@<PRIMARY_IP>
