@@ -14,6 +14,9 @@ sudo apt-get update -y
 # Install OpenSSH Server
 sudo apt-get install openssh-server -y
 
+# Install net-tools
+apt install net-tools -y
+
 # Create postgres user and give it passwordless sudo privileges
 sudo adduser postgres
 sudo visudo
@@ -50,6 +53,9 @@ sudo apt-get install git -y
 
 # Install python3
 sudo apt-get install python3 -y
+
+# Install net-tools
+apt install net-tools -y
 
 # Create postgres user and give it passwordless sudo privileges
 sudo adduser postgres
