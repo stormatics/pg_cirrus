@@ -6,22 +6,19 @@ This directory contains script files for setting up 3-node highly available Post
 
 ### Configure Primary, Standby1 and Standby2 Nodes
 
-Update local apt package manager
 
 ```
+# Update local apt package manager
 sudo apt-get update -y
-```
-Install OpenSSH Server
 
-```
+# Install OpenSSH Server
 sudo apt-get install openssh-server -y
-```
-Create postgres user and give it passwordless sudo privileges
 
-```
+# Create postgres user and give it passwordless sudo privileges
 sudo adduser postgres
 sudo visudo
 ```
+
 Add the following string at the end of visudo file
 
 ```
