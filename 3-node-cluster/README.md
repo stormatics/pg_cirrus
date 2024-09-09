@@ -66,7 +66,7 @@ Generate ssh key-pair if key-pair is not already generated
 ```
 ssh-keygen -t rsa
 ```
-Copy the public key of postgres user on pgpool host to standby1, standby2 and primary hosts for ssh passwordless access (For AWS/EC@ refer to above Configure Primary, Standby1 and Standby2 Nodes section)
+Copy the public key of postgres user on pgpool host to standby1, standby2 and primary hosts for ssh passwordless access (For AWS/EC2 refer to above Configure Primary, Standby1 and Standby2 Nodes section)
 
 ```
 ssh-copy-id postgres@<PRIMARY_IP>
