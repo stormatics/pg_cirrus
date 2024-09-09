@@ -33,7 +33,7 @@ mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys
 
 **NOTE**: We need to open the PostgreSQL port (default is 5432 or the port on which the server is being installed) on primary to allow standby1 and standby2 to establish replication.
 
-### Configure pgpool Node
+### Configure pg_cirrus Node
 
 ```
 # Update local apt package manager
