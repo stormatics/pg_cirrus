@@ -78,6 +78,10 @@ ssh-copy-id postgres@<PRIMARY_IP>
 ssh-copy-id postgres@<STANDBY1_IP>
 ssh-copy-id postgres@<STANDBY2_IP>
 ```
+Copy public key of postgres user to authorized_keys inside postgres user
+```
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+```
 
 Clone github repository
 
