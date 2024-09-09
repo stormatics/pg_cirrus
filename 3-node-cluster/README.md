@@ -25,6 +25,7 @@ Add the following string at the end of visudo file
 postgres ALL=(ALL) NOPASSWD:ALL
 ```
 For AWS/EC2 get your id_rsa.pub of postgres user on pg_cirrus node and run the following command on primary, standby1 and standby2 nodes
+Switch to Postgres user and run
 ```
 mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 ```
