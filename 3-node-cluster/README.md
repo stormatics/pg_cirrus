@@ -29,34 +29,23 @@ postgres ALL=(ALL) NOPASSWD:ALL
 ```
 ### Configure pgpool Node
 
-Update local apt package manager
-
 ```
+# Update local apt package manager
 sudo apt-get update -y
-```
-Install OpenSSH Server
 
-```
+#Install OpenSSH Server
 sudo apt-get install openssh-server -y
-```
-Install Ansible
 
-```
+# Install Ansible
 sudo apt-get install ansible -y
-```
-Install Git
 
-```
+# Install Git
 sudo apt-get install git -y
-```
-Install python3
 
-```
+# Install python3
 sudo apt-get install python3 -y
-```
-Create postgres user and give it passwordless sudo privileges
 
-```
+# Create postgres user and give it passwordless sudo privileges
 sudo adduser postgres
 sudo visudo
 ```
@@ -70,7 +59,7 @@ Generate ssh key-pair for postgres user if key-pair is not already generated
 **NOTE**: If you have already generated public key of postgres user you may skip this step
 
 ```
-ssh-keygen 
+ssh-keygen -t rsa
 ```
 Copy public key of postgres user on pgpool host to standby1, standby2 and primary hosts for ssh passwordless access
 
