@@ -1,157 +1,102 @@
 ---
-# setup-primary.yml
-# This is playbook configures the primary PostgreSQL server.
+- name: Set up PostgreSQL primary node on any Linux distribution
+  hosts: primary
+  become: yes
+  vars:
+    # Define package lists for different distributions
+    debian_packages:
+      - postgresql
+      - openssh-server
+    redhat_packages:
+      - postgresql-server
+      - openssh-server
 
-# Configure the PostgreSQL primary server.
-- name: Configure PostgreSQL primary server
-  hosts: PRIMARY
-  become: true
   tasks:
+    # Task 1: Update package manager's cache (for Debian-based systems)
+    - name: Update apt cache on Debian-based systems
+      ansible.builtin.apt:
+        update_cache: yes
+      when: ansible_facts['distribution'] in ['Ubuntu', 'Debian']
+      tags: package_install
 
-    # Load variables inside conf.yml file.
-    - name: Load common variables
-      include_vars:
-        file: ../../conf.yml
-
-    # Load variables inside vault.yml file.
-    - name: Load vault variables
-      include_vars:
-        file: ../../vault.yml
-
-    # Setup PGDG repository using setup-pgdg-repo.yml task.
-    - name: Setup pgdg repo
-      include_tasks: ../tasks/setup-pgdg-repo.yml
-
-    # Install the specified PostgreSQL version.
-    - name: Install PostgreSQL-{{ PG_VERSION }}
-      apt:
-        name: "{{ 'postgresql-' + PG_VERSION | string }}"
+    # Task 2: Install necessary packages on Debian-based systems
+    - name: Install PostgreSQL and OpenSSH server on Debian-based systems
+      ansible.builtin.apt:
+        name: "{{ debian_packages }}"
         state: present
+      when: ansible_facts['distribution'] in ['Ubuntu', 'Debian']
+      tags: package_install
 
-    # Create data directory for primary PostgreSQL server.
-    - name: Creating data directory
-      become_user: postgres
-      file:
-        path: "{{ INITDB_PATH }}"
-        state: directory
-
-    # Stop the primary PostgreSQL server if it is already running.
-    - name: Stop already running service
-      shell: service postgresql stop
-
-    # Install the required python3 and psycopg2 packages.
-    - name: Installing python3-psycopg2
-      apt:
-        name:
-          - python3-psycopg2
+    # Task 3: Install necessary packages on RHEL-based systems
+    - name: Install PostgreSQL and OpenSSH server on RHEL-based systems
+      ansible.builtin.yum:
+        name: "{{ redhat_packages }}"
         state: present
+      when: ansible_facts['distribution'] in ['CentOS', 'RedHat', 'Fedora']
+      tags: package_install
 
-    # Create .pfile with permission 0600 to store PSQL_SERVER_PASSWORD value from vault.yml.
-    - name: Creating password file
-      become_user: postgres
-      copy:
-        dest: "~/.pfile"
-        mode: 0600
-        content: "{{ PSQL_SERVER_PASSWORD }}"
+    # Task 4: Ensure PostgreSQL service is started and enabled (runs for all Linux distros)
+    - name: Ensure PostgreSQL service is running
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: yes
+      tags: service_management
 
-    # Check if data directory is empty.
-    - name: Check if the data directory is empty
-      find:
-        paths: "{{ INITDB_PATH }}"
-        file_type: directory
-        patterns: "*"
-      register: DIR_CONTENTS
-
-    # Display error message if data directory is not empty.
-    - name: Display message and exit if the data directory is not empty
-      fail:
-        msg: "The data directory '{{ INITDB_PATH }}' is not empty."
-      when: DIR_CONTENTS.files | length > 0
-
-    # Initialize the data directory for the Primary PostgreSQL server.
-    - name: Initialize the data directory for the Primary PostgreSQL server
-      become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/initdb -D {{ INITDB_PATH }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
-
-    # Update the PostgreSQL configuration file postgresql.conf using Ansible's replace module.
-    - name: Update postgresql.conf
-      become_user: postgres
-      replace:
-        path: "{{ INITDB_PATH }}/postgresql.conf"
-        regexp: "{{ item.regexp }}"
-        replace: "{{ item.replace }}"
-      with_items:
-        - { regexp: "#listen_addresses = 'localhost'", replace: "listen_addresses = '*'" } # listen_addresses is set to listen on all IP addresses.
-        - { regexp: "#wal_level = replica", replace: "wal_level = replica" } # wal_level is set to replica.
-        - { regexp: "#max_wal_senders = 10", replace: "max_wal_senders = 10" } # max_wal_senders is set to 10.
-        - { regexp: "#wal_keep_size = 0", replace: "wal_keep_size = 1GB" } # wal_keep_size is set to 1GB.
-
-    # Start the Primary PostgreSQL server.
-    - name: Start the server
-      become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} start -o "-p {{ PG_PORT }}"
-
-    # Create replication slots.
-    - name: Creating a replication slots
-      postgresql_query:
-        login_user: postgres
-        login_password: "{{ PSQL_SERVER_PASSWORD }}"
-        port: "{{ PG_PORT }}"
-        query: "SELECT pg_create_physical_replication_slot('{{ item.PG_REPLICATION_SLOT }}');"
-      loop: "{{ STANDBY_SERVERS }}"
-
-    # Create a replication user.
-    - name: Creating a replication user
-      postgresql_query:
-        login_user: postgres
-        login_password: "{{ PSQL_SERVER_PASSWORD }}"
-        port: "{{ PG_PORT }}"
-        query: "create user repuser with password '{{ REPUSER_PASSWORD }}' replication;"
-
-    # Update the pg_hba.conf file for replication access. 
-    # Access to the PostgreSQL server from any IP address within the CLUSTER_SUBNET allowed only using PSQL_SERVER_PASSWORD.
-    - name: Update pg_hba.conf
-      become_user: postgres
-      lineinfile:
-        path: "{{ INITDB_PATH }}/pg_hba.conf"
-        line: |
-          host    replication     repuser     {{ CLUSTER_SUBNET }}       scram-sha-256
-          host    all             all         {{ CLUSTER_SUBNET }}       scram-sha-256
-        insertafter: EOF
-
-    # Restart the primary PostgreSQL server
-    - name: Restart the server
-      become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} restart -o "-p {{ PG_PORT }}"
-
-    # Install pgpool using apt
-    - name: Install pgpool2
-      apt:
-        name: pgpool2
+    # Task 5: Ensure passwordless sudo for the postgres user
+    - name: Configure passwordless sudo for postgres user
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
         state: present
+        regexp: '^postgres ALL=\(ALL\) NOPASSWD:ALL'
+        line: 'postgres ALL=(ALL) NOPASSWD:ALL'
+      tags: sudo_setup
 
-    # Change owner, group and permissions of pcp.conf file
-    - name: Change permissions, owner, and group of the pcp.conf file
-      file:
-        path: /etc/pgpool2/pcp.conf
-        owner: postgres  # Set the owner to postgres
-        group: postgres  # Set the group to postgres
-        mode: "0600"  # Set the permissions to 0600
-
-    # Add postgres user and PSQL_SERVER_PASSWORD to pcp.conf file
-    - name: Add user and password to pcp.conf
-      command: sh -c "echo 'postgres:'$(pg_md5 {{ PSQL_SERVER_PASSWORD }}) >> /etc/pgpool2/pcp.conf"
-
-    # Stop pgpool2 service on primary node.
-    - name: Stopping pgpool2 service
-      service:
-        name: pgpool2
-        state: stopped
-
-    # Create a .pcppass file.
-    - name: Creating pcppass file
+    # Task 6: Check if SSH keys already exist for postgres
+    - name: Check if SSH key for postgres exists
+      ansible.builtin.stat:
+        path: /home/postgres/.ssh/id_rsa
+      register: ssh_key_exists
       become_user: postgres
-      copy:
-        dest: "~/.pcppass"
-        mode: 0600
-        content: "{{ PGPOOL_IP }}:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
+      tags: ssh_key
+
+    # Task 7: Generate SSH key for postgres user if it doesn't exist
+    - name: Generate SSH key for postgres if not exists
+      ansible.builtin.openssh_keypair:
+        path: /home/postgres/.ssh/id_rsa
+        type: rsa
+      become_user: postgres
+      when: not ssh_key_exists.stat.exists
+      tags: ssh_key
+
+    # Task 8: Copy SSH public key to all nodes (for passwordless access)
+    - name: Copy SSH public key to other nodes
+      ansible.builtin.shell: |
+        ssh-copy-id postgres@{{ item }}
+      loop:
+        - "{{ primary_ip }}"
+        - "{{ standby1_ip }}"
+        - "{{ standby2_ip }}"
+      become_user: postgres
+      tags: ssh_key
+
+    # Task 9: Install Python 3 (if needed for Ansible)
+    - name: Install Python 3 on RHEL-based systems
+      ansible.builtin.yum:
+        name: python3
+        state: present
+      when: ansible_facts['distribution'] in ['CentOS', 'RedHat', 'Fedora']
+      tags: python_install
+
+    - name: Install Python 3 on Debian-based systems
+      ansible.builtin.apt:
+        name: python3
+        state: present
+      when: ansible_facts['distribution'] in ['Ubuntu', 'Debian']
+      tags: python_install
+
+    # Task 10: Run Ansible vault creation (if needed for passwords)
+    - name: Create Ansible vault file for sensitive data
+      ansible.builtin.command:
+        cmd: "ansible-vault create /home/postgres/pg_cirrus/vault.yml"
+      tags: vault_setup
