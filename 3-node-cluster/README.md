@@ -27,14 +27,19 @@ Add the following string at the end of visudo file
 ```
 postgres ALL=(ALL) NOPASSWD:ALL
 ```
-For AWS/EC2 get your id_rsa.pub of postgres user on pg_cirrus node and run the following command on primary, standby1 and standby2 nodes
-Switch to Postgres user and run
+#### For AWS/EC2 
+Move to the pg_cirrus node. Switch to the postgres user. Copy its id_rsa.pub and run the following command on primary, standby1 and standby2 nodes
+Switch to the Postgres user
+```
+sudo su postgres
+```
+Place id_rsa.pub to authorized_keys
 ```
 mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 ```
-**NOTE**: On AWS/EC2, update the inbound rule for the primary, standby1 and standby2 node to allow All **ICMP - IPv4 traffic** from the pg_cirrus node.
-
-**NOTE**: We need to open the PostgreSQL port (default is 5432 or the port on which the server is being installed) on primary to allow standby1 and standby2 to establish replication.
+**NOTE**
+On AWS/EC2, update the inbound rule for the primary, standby1 and standby2 node to allow All **ICMP - IPv4 traffic** from the pg_cirrus node.
+We need to open the PostgreSQL port (default is 5432 or the port on which the server is being installed) on primary to allow standby1 and standby2 to establish replication.
 
 ### Configure pg_cirrus Node
 
