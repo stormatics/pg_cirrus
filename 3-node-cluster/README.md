@@ -35,8 +35,9 @@ Place id_rsa.pub to authorized_keys
 mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 ```
 **NOTE**
-On AWS/EC2, update the inbound rule for the primary, standby1 and standby2 node to allow All **ICMP - IPv4 traffic** from the pg_cirrus node.
-We need to open the PostgreSQL port (default is 5432 or the port on which the server is being installed) on primary to allow standby1 and standby2 to establish replication.
+
+- On AWS/EC2, update the inbound rule for the primary, standby1 and standby2 node to allow All **ICMP - IPv4 traffic** from the pg_cirrus node.
+- We need to open the PostgreSQL port (default is 5432 or the port on which the server is being installed) on primary to allow standby1 and standby2 to establish replication.
 
 ### Configure pg_cirrus Node
 
