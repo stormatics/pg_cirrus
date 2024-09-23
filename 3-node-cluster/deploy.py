@@ -74,7 +74,12 @@ def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
         MAJOR_VERSION = next(line.split(':')[1].strip().split('.')[0] for line in OUTPUT.split('\n') if 'Candidate' in line)
         MAJOR_VERSION = MAJOR_VERSION.split('+')[0]  # Extract only the major number.
 
-    if os.path.exists('/usr/bin/yum'): 
+    if os.path.exists('/usr/bin/yum'):
+        try:
+            subprocess.run(['ansible-playbook', "--become", "ansible/playbooks/setup-pgdg-repo.yml"], check=True)
+        except subprocess.CalledProcessError as ERROR:
+            print("Error: Failed to execute setup-pgdg-repo.yml playbook.")
+            raise ERROR
         MAJOR_VERSION = os.popen("sudo yum info postgresql*-server | grep Version | awk '{print $3}' | cut -d '.' -f 1 | sort -V | tail -n 1").read()
 
     return MAJOR_VERSION.strip()

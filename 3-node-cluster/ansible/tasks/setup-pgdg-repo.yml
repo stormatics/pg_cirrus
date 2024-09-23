@@ -24,10 +24,18 @@
   apt:
     update_cache: yes
 
-- name: Add pgdg repo to YUM (Red Hat/CentOS
+- name: Download the PGDG RPM package
+  get_url:
+    url: https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}/pgdg-redhat-repo-latest.noarch.rpm
+    dest: /tmp/pgdg-redhat-repo-latest.noarch.rpm
+
+- name: Add pgdg repo to YUM (Red Hat/CentOS/Fedora)
+  become: true
   when: ansible_facts['os_family'] == 'RedHat'
-    #shell: dnf install -y https://download.postgresql.org/pub/repos/yum//EL-{{ ansible_distribution_major_version }}-$basearch
-  command: echo hello
+  yum: 
+    disable_gpg_check: True
+    name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
 
 - name: Clean YUM cache (Red Hat/CentOS/Fedora)
   when: ansible_facts['os_family'] == 'RedHat'
