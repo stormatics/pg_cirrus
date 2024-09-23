@@ -6,13 +6,13 @@
 ### Configure Primary, Standby1 and Standby2 Nodes
 ```
 # Update local yum package manager
-sudo yum update -y
+sudo dnf update -y
 
 # Install OpenSSH Server
-sudo yum install openssh-server -y
+sudo dnf install openssh-server -y
 
 # Install net-tools
-sudo yum install net-tools -y
+sudo dnf install net-tools -y
 
 # Create a Postgres user and give it passwordless sudo privileges
 sudo adduser postgres
@@ -42,22 +42,23 @@ mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys
 
 ```
 # Update local apt package manager
-sudo yum update -y
+sudo dnf update -y
 
 #Install OpenSSH Server
-sudo yum install openssh-server -y
+sudo dnf install openssh-server -y
 
-# Install Ansible
-sudo yum install ansible -y
+# Install Ansible (On RHEL9 we need epel-release also)
+sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
+sudo dnf install ansible -y
 
 # Install Git
-sudo yum install git -y
+sudo dnf install git -y
 
 # Install python3
-sudo yum install python3 -y
+sudo dnf install python3 -y
 
 # Install net-tools
-sudo yum install net-tools -y
+sudo dnf install net-tools -y
 
 # Create a Postgres user and give it passwordless sudo privileges
 sudo adduser postgres
