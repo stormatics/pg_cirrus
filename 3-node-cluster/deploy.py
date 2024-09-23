@@ -241,10 +241,9 @@ def GET_VALID_SUBNET():
 def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
-  #VAULT_PASSWORD_FILE = GET_VAULT_PASSWORD_FILE()
-  VAULT_PASSWORD_FILE = "/home/postgres/pg_cirrus/3-node-cluster/vault"
+  VAULT_PASSWORD_FILE = GET_VAULT_PASSWORD_FILE()
   print("\n")
-  '''
+
   print("Getting latest PostgreSQL stable version ...")
   PG_VERSION = GET_POSTGRESQL_VERSION()
 
@@ -273,7 +272,7 @@ def main():
 
   GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP)
   GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
-'''
+
   EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)
 
 if __name__ == "__main__":
