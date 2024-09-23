@@ -6,6 +6,7 @@
 - name: Configure PostgreSQL primary server
   hosts: PRIMARY
   become: true
+  gather_facts: yes
   tasks:
 
     # Load variables inside conf.yml file.
@@ -24,7 +25,7 @@
 
     # Install the specified PostgreSQL version.
     - name: Install PostgreSQL-{{ PG_VERSION }}
-      apt:
+      package:
         name: "{{ 'postgresql-' + PG_VERSION | string }}"
         state: present
 

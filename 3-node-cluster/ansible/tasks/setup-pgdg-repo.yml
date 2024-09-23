@@ -4,19 +4,39 @@
 # Tasks included in this file are to add PGDG repository, download PostgreSQL key and update cache using apt.
 
 # Add the repository for PostgreSQL to the list of sources used by apt-get to install packages.
-- name: Add pgdg repo to sources.list.d
+- name: Add pgdg repo to sources (Debian/Ubuntu)
+  when: ansible_facts['os_family'] == 'Debian'
   lineinfile:
     path: /etc/apt/sources.list.d/pgdg.list
     line: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
     create: true
 
 # Download the PostgreSQL key and add it to the system keyring
-- name: Download PostgreSQL key and add it to system keyring
+- name: Download PostgreSQL key (Debian/Ubuntu)
+  when: ansible_facts['os_family'] == 'Debian'
   apt_key:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     state: present
 
 # Update the local cache of packages available in the repository, so that the latest packages can be installed.
-- name: Update apt cache
+- name: Update apt cache (Debian/Ubuntu)
+  when: ansible_facts['os_family'] == 'Debian'
   apt:
     update_cache: yes
+
+- name: Add pgdg repo to YUM (Red Hat/CentOS/Fedora)
+  when: ansible_facts['os_family'] == 'RedHat'
+  yum_repository:
+    name: pgdg
+    description: PGDG YUM Repository
+    baseurl: https://download.postgresql.org/pub/repos/yum/{{ ansible_distribution_major_version }}/redhat/rhel-{{ ansible_release }}-{{ ansible_architecture }}
+    enabled: yes
+    gpgkey: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+- name: Clean YUM cache (Red Hat/CentOS/Fedora)
+  when: ansible_facts['os_family'] == 'RedHat'
+  command: yum clean all
+
+- name: Update YUM cache (Red Hat/CentOS/Fedora)
+  when: ansible_facts['os_family'] == 'RedHat'
+  command: yum makecache
