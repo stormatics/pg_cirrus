@@ -14,6 +14,9 @@ sudo dnf install openssh-server -y
 # Install net-tools
 sudo dnf install net-tools -y
 
+cd /tmp && curl -OL https://artifacts.m6w6.name/libmemcached/1.1.4/RPM/Linux-x86_64-GNU-12.3.0-Release/libmemcached-awesome-1.1.4.rpm
+sudo rpm -ivsh libmemcached-awesome-1.1.4.rpm && cd
+
 # Create a Postgres user and give it passwordless sudo privileges
 sudo adduser postgres
 sudo visudo
