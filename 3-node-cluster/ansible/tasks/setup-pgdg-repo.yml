@@ -25,6 +25,7 @@
     update_cache: yes
 
 - name: Download the PGDG RPM package
+  when: ansible_facts['os_family'] == 'RedHat'
   get_url:
     url: https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}/pgdg-redhat-repo-latest.noarch.rpm
     dest: /tmp/pgdg-redhat-repo-latest.noarch.rpm
