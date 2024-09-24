@@ -147,6 +147,7 @@
 
     - name: Install pgpool-II release RPM
       dnf:
+        disable_gpg_check: True
         name: https://www.pgpool.net/yum/rpms/4.5/redhat/rhel-9-x86_64/pgpool-II-release-4.5-1.noarch.rpm
         state: present
       when: ansible_facts['os_family'] == 'RedHat'
