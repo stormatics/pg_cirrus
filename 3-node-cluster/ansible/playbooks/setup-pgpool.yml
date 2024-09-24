@@ -61,7 +61,7 @@
         - { regexp: "#sr_check_user = 'nobody'", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks.
         - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds.
         - { regexp: "#health_check_user = 'nobody'", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks.
-        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "pool_passwd = '/etc/pgpool2/pool_passwd'" } # Set path of pgpool password file.
+        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary(\"pool_passwd = '/etc/pgpool-II/pool_passwd'\", \"pool_passwd = '/etc/pgpool2/pool_passwd'\") }}" }
         - { regexp: "#sr_check_password = ''", replace: "sr_check_password = ''" } # Leave streaming replication password blank.
         - { regexp: "#health_check_password = ''", replace: "health_check_password = ''" } # Leave health check password blank.
         - { regexp: "#backend_hostname0 = 'host1'", replace: "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'" } # Set the hostname for the primary PostgreSQL node.
@@ -129,6 +129,15 @@
           repuser:{{ REPUSER_PASSWORD }}
           postgres:{{ PSQL_SERVER_PASSWORD }}
         insertafter: EOF
+
+    - name: Ensure PostgreSQL socket directory exists
+      ansible.builtin.file:
+        path: /var/run/postgresql
+        state: directory
+        owner: postgres
+        group: postgres
+         mode: '0775'
+      when: ansible_facts['os_family'] == 'RedHat'
 
     # Stop already running pgpool2 service on localhost.
     - name: Stopping the already running pgpool2 service
