@@ -24,8 +24,8 @@
 
     # Install the specified PostgreSQL version.
     - name: Install PostgreSQL-{{ PG_VERSION }}
-      apt:
-        name: "{{ 'postgresql-' + PG_VERSION | string }}"
+      package:
+        name: "{{ 'postgresql' + (('-' + PG_VERSION | string) if ansible_facts['os_family'] == 'Debian' else PG_VERSION | string + '-server') }}"
         state: present
 
     # Create data directory on standby servers.
@@ -48,6 +48,7 @@
     # Stop already running PostgreSQL service.
     - name: Stop already running service
       shell: service postgresql stop
+      when: ansible_facts['os_family'] == 'Debian'
 
     # Create a .pgpass file to store psql and repuser password in PSQL_SERVER_PASSWORD and REPUSER_PASSWORD variables inside vault.yml.
     - name: Creating .pgpass file
@@ -94,30 +95,49 @@
     # Start standby servers.
     - name: Start the standby server
       become_user: postgres
-      shell: /usr/lib/postgresql/{{ PG_VERSION }}/bin/pg_ctl -D {{ INITDB_PATH }} start -o "-p {{ PG_PORT }}"
+      shell: >
+        {{ (ansible_facts['os_family'] == 'RedHat') | ternary(
+          '/usr/pgsql-' + PG_VERSION | string + '/bin/pg_ctl',
+          '/usr/lib/postgresql/' + PG_VERSION | string + '/bin/pg_ctl'
+        ) }} -D {{ INITDB_PATH }} start -o "-p {{ PG_PORT }}"
 
     # Install pgpool using apt.
     - name: Install pgpool2
-      apt:
+      package:
         name: pgpool2
         state: present
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Install pgpool-II release RPM
+      dnf:
+        disable_gpg_check: True
+        name: https://www.pgpool.net/yum/rpms/4.5/redhat/rhel-9-x86_64/pgpool-II-release-4.5-1.noarch.rpm
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Install pgpool-II for the specified PostgreSQL version on RHEL
+      dnf:
+        name: pgpool-II-pg{{ PG_VERSION }}
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat'
 
     # Change owner, group and permissions of pcp.conf file.
     - name: Change permissions, owner, and group of the pcp.conf file
       file:
-        path: /etc/pgpool2/pcp.conf
+        path: "{{ '/etc/pgpool-II/pcp.conf' if ansible_facts['os_family'] == 'RedHat' else '/etc/pgpool2/pcp.conf' }}"
         owner: postgres  # Set the owner to postgres
         group: postgres  # Set the group to postgres
         mode: "0600"  # Set the permissions to 0600
 
     # Add postgres user and PSQL_SERVER_PASSWORD to pcp.conf file.
     - name: Add user and password to pcp.conf
-      command: sh -c "echo 'postgres:'$(pg_md5 {{ PSQL_SERVER_PASSWORD }}) >> /etc/pgpool2/pcp.conf"
+      command: >
+        sh -c "echo 'postgres:'$(pg_md5 {{ PSQL_SERVER_PASSWORD }}) >> {{ '/etc/pgpool-II/pcp.conf' if ansible_facts['os_family'] == 'RedHat' else '/etc/pgpool2/pcp.conf' }}"
 
     # Stop pgpool2 service on standbys.
     - name: Stopping pgpool2 service
       service:
-        name: pgpool2
+        name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
         state: stopped
 
     # Create a .pcppass file.

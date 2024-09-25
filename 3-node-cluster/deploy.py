@@ -68,11 +68,19 @@ def GET_LATEST_POSTGRESQL_MAJOR_VERSION():
     EXECUTE_PGDG_PLAYBOOK()
 
     # Get the latest major version number.
-    OUTPUT = os.popen('sudo apt-cache policy postgresql').read()
+    if os.path.exists('/usr/bin/apt'):
+        OUTPUT = os.popen('sudo apt-cache policy postgresql').read()
+        # Extract the latest major version number.
+        MAJOR_VERSION = next(line.split(':')[1].strip().split('.')[0] for line in OUTPUT.split('\n') if 'Candidate' in line)
+        MAJOR_VERSION = MAJOR_VERSION.split('+')[0]  # Extract only the major number.
 
-    # Extract the latest major version number.
-    MAJOR_VERSION = next(line.split(':')[1].strip().split('.')[0] for line in OUTPUT.split('\n') if 'Candidate' in line)
-    MAJOR_VERSION = MAJOR_VERSION.split('+')[0]  # Extract only the major number.
+    if os.path.exists('/usr/bin/yum'):
+        try:
+            subprocess.run(['ansible-playbook', "--become", "ansible/playbooks/setup-pgdg-repo.yml"], check=True)
+        except subprocess.CalledProcessError as ERROR:
+            print("Error: Failed to execute setup-pgdg-repo.yml playbook.")
+            raise ERROR
+        MAJOR_VERSION = os.popen("sudo yum info postgresql*-server | grep Version | awk '{print $3}' | cut -d '.' -f 1 | sort -V | tail -n 1").read()
 
     return MAJOR_VERSION.strip()
 
@@ -239,8 +247,8 @@ def main():
   print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
   VAULT_PASSWORD_FILE = GET_VAULT_PASSWORD_FILE()
-
   print("\n")
+
   print("Getting latest PostgreSQL stable version ...")
   PG_VERSION = GET_POSTGRESQL_VERSION()
 

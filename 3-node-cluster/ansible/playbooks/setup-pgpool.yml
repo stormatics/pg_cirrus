@@ -20,9 +20,23 @@
 
     # Install pgpool using apt.
     - name: Install pgpool2
-      apt:
+      package:
         name: pgpool2
         state: present
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Install pgpool-II release RPM
+      dnf:
+        disable_gpg_check: True
+        name: https://www.pgpool.net/yum/rpms/4.5/redhat/rhel-9-x86_64/pgpool-II-release-4.5-1.noarch.rpm
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Install pgpool-II for the specified PostgreSQL version on RHEL
+      dnf:
+        name: pgpool-II-pg{{ PG_VERSION }}
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat'
 
     # Create pgpool_logs directory in /var/log/ .
     - name: Create pgpool_logs directory in /var/log/
@@ -36,7 +50,7 @@
     # Update pgpool configurations in pgpool.conf file using Ansible's replace module.
     - name: Update pgpool.conf file
       replace:
-        path: /etc/pgpool2/pgpool.conf
+        path: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pgpool.conf', '/etc/pgpool2/pgpool.conf') }}"
         regexp: "{{ item.regexp }}"
         replace: "{{ item.replace }}"
       with_items:
@@ -47,7 +61,7 @@
         - { regexp: "#sr_check_user = 'nobody'", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks.
         - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds.
         - { regexp: "#health_check_user = 'nobody'", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks.
-        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "pool_passwd = '/etc/pgpool2/pool_passwd'" } # Set path of pgpool password file.
+        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary(\"pool_passwd = '/etc/pgpool-II/pool_passwd'\", \"pool_passwd = '/etc/pgpool2/pool_passwd'\") }}" }
         - { regexp: "#sr_check_password = ''", replace: "sr_check_password = ''" } # Leave streaming replication password blank.
         - { regexp: "#health_check_password = ''", replace: "health_check_password = ''" } # Leave health check password blank.
         - { regexp: "#backend_hostname0 = 'host1'", replace: "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'" } # Set the hostname for the primary PostgreSQL node.
@@ -75,7 +89,8 @@
 
     # Check if backend_hostname2 exists in pgpool.conf.
     - name: Search for existing standby2 in pgpool.conf
-      shell: cat /etc/pgpool2/pgpool.conf | grep "backend_hostname2"
+      shell: cat "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pgpool.conf', '/etc/pgpool2/pgpool.conf') }}" | grep "backend_hostname2"
+      #shell: cat /etc/pgpool2/pgpool.conf | grep "backend_hostname2"
       register: PGPOOL_CONF_CONTENT
       ignore_errors: yes
       failed_when: false
@@ -83,7 +98,7 @@
     # Configurations for standby2 PostgreSQL server are added to pgpool.conf file if they don't already exist.
     - name: Add configurations for standby2 to pgpool.conf if not already present
       lineinfile:
-        path: /etc/pgpool2/pgpool.conf
+        path: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pgpool.conf', '/etc/pgpool2/pgpool.conf') }}"
         line: |
           backend_hostname2 = '{{ hostvars['STANDBY2']['ansible_host'] }}' # Set the hostname for the standby2 PostgreSQL node.
           backend_port2 = {{ PG_PORT }} # Set the port for standby2 PostgreSQL node.
@@ -97,32 +112,41 @@
     # Change owner, group and permissions of pcp.conf file.
     - name: Change permissions, owner, and group of the pcp.conf file
       file:
-        path: /etc/pgpool2/pcp.conf
+        path: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pcp.conf', '/etc/pgpool2/pcp.conf') }}"
         owner: postgres  # Set the owner to postgres.
         group: postgres  # Set the group to postgres.
         mode: "0600"  # Set the permissions to 0600.
 
     # Add postgres user and PSQL_SERVER_PASSWORD to pcp.conf file.
     - name: Add user and password to pcp.conf
-      command: sh -c "echo 'postgres:'`pg_md5 {{ PSQL_SERVER_PASSWORD }}` >> /etc/pgpool2/pcp.conf"
+      command: sh -c "echo 'postgres:'`pg_md5 {{ PSQL_SERVER_PASSWORD }}` >> {{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pcp.conf', '/etc/pgpool2/pcp.conf') }}"
 
     # Create a pgpool password file in /etc/pgpool2 directory.
     - name: Create a pool_passwd file
       lineinfile:
-        path: /etc/pgpool2/pool_passwd
+        path: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pool_passwd', '/etc/pgpool2/pool_passwd') }}"
         line: |
           repuser:{{ REPUSER_PASSWORD }}
           postgres:{{ PSQL_SERVER_PASSWORD }}
         insertafter: EOF
 
+    - name: Ensure PostgreSQL socket directory exists
+      ansible.builtin.file:
+        path: /var/run/postgresql
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0775'
+      when: ansible_facts['os_family'] == 'RedHat'
+
     # Stop already running pgpool2 service on localhost.
     - name: Stopping the already running pgpool2 service
       service:
-        name: pgpool2
+        name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
         state: stopped
 
     # Start pgpool2 srevice on localhost.
     - name: Start pgpool2 service
       service:
-        name: pgpool2
+        name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
         state: started
