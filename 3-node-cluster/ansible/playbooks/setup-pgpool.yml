@@ -136,7 +136,7 @@
         state: directory
         owner: postgres
         group: postgres
-         mode: '0775'
+        mode: '0775'
       when: ansible_facts['os_family'] == 'RedHat'
 
     # Stop already running pgpool2 service on localhost.
