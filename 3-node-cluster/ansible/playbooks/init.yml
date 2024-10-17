@@ -46,16 +46,13 @@
         group: postgres
         mode: '0700'
 
-    - name: Check if SSH key already exists
-      ansible.builtin.stat:
-        path: /home/postgres/.ssh/id_rsa.pub
-      register: ssh_key_check
-
-    - name: Generate SSH key-pair for postgres user if not already generated
-      ansible.builtin.command: >
-        ssh-keygen -t rsa -b 4096 -f /home/postgres/.ssh/id_rsa -N ''
-      when: not ssh_key_check.stat.exists
-      become_user: postgres 
+    - name: Generate SSH key pair if not already present
+      ansible.builtin.openssh_keypair:
+        path: "/home/postgres/.ssh/id_rsa"
+        type: rsa
+        size: 4096
+        force: no  # Will not overwrite an existing key
+      become_user: postgres
 
     - name: Ensure correct permissions on generated SSH keys
       ansible.builtin.file:
