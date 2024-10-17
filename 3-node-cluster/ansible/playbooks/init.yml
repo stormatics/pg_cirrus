@@ -1,0 +1,65 @@
+---
+# init.yml
+# This file is used to run all the pre requirements for pg_cirrus 
+
+# Configure pgpool on local host.
+- name: Preparing the pgpool node
+  hosts: localhost
+  become: true
+  vars:
+    postgres_password: "postgres"  # Default password for the postgres operating system user
+  tasks:
+
+    - name: Update package manager cache
+      ansible.builtin.package:
+        update_cache: yes
+
+    - name: Ensure OpenSSH Server and net-tools are installed
+      ansible.builtin.package:
+        name:
+          - openssh-server
+          - net-tools
+          - git
+          - python3
+          - acl
+        state: present
+
+    - name: Ensure postgres user is created with default password
+      ansible.builtin.user:
+        name: postgres
+        password: "{{ postgres_password | password_hash('sha512') }}"
+        state: present
+        shell: /bin/bash
+
+    - name: Allow postgres user to run sudo without password
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        line: "postgres ALL=(ALL) NOPASSWD:ALL"
+        validate: 'visudo -cf %s'
+
+    - name: Ensure SSH directory exists for postgres user
+      ansible.builtin.file:
+        path: /home/postgres/.ssh
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0700'
+
+    - name: Check if SSH key already exists
+      ansible.builtin.stat:
+        path: /home/postgres/.ssh/id_rsa.pub
+      register: ssh_key_check
+
+    - name: Generate SSH key-pair for postgres user if not already generated
+      ansible.builtin.command: >
+        ssh-keygen -t rsa -b 4096 -f /home/postgres/.ssh/id_rsa -N ''
+      when: not ssh_key_check.stat.exists
+      become_user: postgres 
+
+    - name: Ensure correct permissions on generated SSH keys
+      ansible.builtin.file:
+        path: /home/postgres/.ssh/id_rsa
+        owner: postgres
+        group: postgres
+        mode: '0600'
