@@ -3,16 +3,28 @@
 # init.sh
 # This file is used to install pre requirements. Run this file on all the nodes in the cluster
 
+# Function to detect package manager and install required packages
+install_packages() {
+    if [ -f /etc/redhat-release ]; then
+        # Red Hat-based systems (RHEL, CentOS, etc.)
+        echo "Detected Red Hat-based system. Installing packages..."
+        sudo yum install -y openssh-server net-tools git python3 acl
+    elif [ -f /etc/debian_version ]; then
+        # Debian-based systems (Ubuntu, Debian, etc.)
+        echo "Detected Debian-based system. Installing packages..."
+        sudo apt-get update -y
+        sudo apt-get install -y openssh-server net-tools git python3 acl
+    else
+        echo "Unsupported OS. Exiting."
+        exit 1
+    fi
+}
+
 # Set the postgres password
 POSTGRES_PASSWORD="postgres"
 
-# Update package manager cache
-echo "Updating package manager cache..."
-sudo apt-get update -y
-
-# Ensure OpenSSH Server, net-tools, git, python3, and acl are installed
-echo "Installing required packages..."
-sudo apt-get install -y openssh-server net-tools git python3 acl
+# Update package manager cache and install packages
+install_packages
 
 # Ensure postgres user is created with default password
 echo "Ensuring postgres user is created..."
