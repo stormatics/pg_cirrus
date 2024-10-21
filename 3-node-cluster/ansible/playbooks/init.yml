@@ -1,9 +1,8 @@
 ---
 # init.yml
-# This file is used to run all the pre requirements for pg_cirrus 
+# This file is used to install pre requirements. Run this file on all the nodes in the cluster
 
-# Configure pgpool on local host.
-- name: Preparing the pgpool node
+- name: Preparing required node
   hosts: localhost
   become: true
   vars:
