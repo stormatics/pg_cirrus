@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# init.sh
+# This file is used to install pre requirements. Run this file on all the nodes in the cluster
+
 # Set the postgres password
 POSTGRES_PASSWORD="postgres"
 
