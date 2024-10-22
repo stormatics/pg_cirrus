@@ -16,7 +16,7 @@ Download init.sh file from pg_cirrus repository and execute it on all the nodes 
 ################################################################
 Setup passwordless SSH access from pg_cirrus node to other nodes 
 ################################################################
-Move to the pg_cirrus node. Switch to the Postgres user. 
+Switch to the Postgres user on all the nodes inside the cluster
 - sudo su postgres
 
 Copy its id_rsa.pub and run the following command on primary, standby1 and standby2 nodes
