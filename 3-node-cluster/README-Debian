@@ -33,9 +33,9 @@ Copy the public key of the Postgres user to authorized_keys inside the Postgres 
 ######################################################################################################
 - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
 
-################
- Clone pg_cirrus
-################
+##################################
+Clone pg_cirrus on pg_cirrus node
+##################################
 Go to $HOME of postgres user
 - cd $HOME
 
