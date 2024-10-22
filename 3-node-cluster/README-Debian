@@ -17,7 +17,7 @@ Clone pg_cirrus
 Setup passwordless SSH access from pg_cirrus node to other nodes 
 ################################################################
 Move to the pg_cirrus node. Switch to the Postgres user. 
-sudo su postgres
+- sudo su postgres
 
 Copy its id_rsa.pub and run the following command on primary, standby1 and standby2 nodes
 - mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
