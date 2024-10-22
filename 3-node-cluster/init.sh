@@ -8,6 +8,7 @@ install_packages() {
     if [ -f /etc/redhat-release ]; then
         # Red Hat-based systems (RHEL, CentOS, etc.)
         echo "Detected Red Hat-based system. Installing packages..."
+	sudo yum update -y
         sudo yum install -y openssh-server net-tools python3 acl ansible git
     elif [ -f /etc/debian_version ]; then
         # Debian-based systems (Ubuntu, Debian, etc.)
