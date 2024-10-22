@@ -8,9 +8,9 @@ Configure pg_cirrus, Primary, Standby1 and Standby2 Nodes
 Install git if not installed already
 - sudo apt-get install git -y
 
-Clone pg_cirrus
-- git clone https://github.com/stormatics/pg_cirrus.git
-- cd pg_cirrus/3-node-cluster
+# Download init.sh file from pg_cirrus repository and execute it
+- curl -OL https://raw.githubusercontent.com/stormatics/pg_cirrus/automate-pre-req-steps/3-node-cluster/init.sh
+- chmod +x init.sh
 - ./init.sh
 
 ################################################################
@@ -51,4 +51,7 @@ Write the vault password inside this file
 #################
 Execute pg_cirrus
 #################
+Clone pg_cirrus
+- git clone https://github.com/stormatics/pg_cirrus.git
+- cd pg_cirrus/3-node-cluster
 - python3 deploy.py
