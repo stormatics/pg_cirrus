@@ -5,6 +5,10 @@ Debian Setup
 #########################################################
 Configure pg_cirrus, Primary, Standby1 and Standby2 Nodes
 #########################################################
+# Install git if not installed already
+- sudo apt-get install git -y
+
+# Clone pg_cirrus
 - git clone https://github.com/stormatics/pg_cirrus.git
 - cd pg_cirrus/3-node-cluster
 - ./init.sh
