@@ -8,7 +8,7 @@ Configure pg_cirrus, Primary, Standby1 and Standby2 Nodes
 Install git if not installed already
 - sudo apt-get install git -y
 
-# Download init.sh file from pg_cirrus repository and execute it
+Download init.sh file from pg_cirrus repository and execute it on all the nodes inside the cluster
 - curl -OL https://raw.githubusercontent.com/stormatics/pg_cirrus/automate-pre-req-steps/3-node-cluster/init.sh
 - chmod +x init.sh
 - ./init.sh
