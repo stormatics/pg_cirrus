@@ -5,10 +5,10 @@ Debian Setup
 #########################################################
 Configure pg_cirrus, Primary, Standby1 and Standby2 Nodes
 #########################################################
-# Install git if not installed already
+Install git if not installed already
 - sudo apt-get install git -y
 
-# Clone pg_cirrus
+Clone pg_cirrus
 - git clone https://github.com/stormatics/pg_cirrus.git
 - cd pg_cirrus/3-node-cluster
 - ./init.sh
@@ -16,7 +16,10 @@ Configure pg_cirrus, Primary, Standby1 and Standby2 Nodes
 ################################################################
 Setup passwordless SSH access from pg_cirrus node to other nodes 
 ################################################################
-Move to the pg_cirrus node. Switch to the Postgres user. Copy its id_rsa.pub and run the following command on primary, standby1 and standby2 nodes
+Move to the pg_cirrus node. Switch to the Postgres user. 
+sudo su postgres
+
+Copy its id_rsa.pub and run the following command on primary, standby1 and standby2 nodes
 - mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 
 NOTE
