@@ -19,7 +19,7 @@ Setup passwordless SSH access from pg_cirrus node to other nodes
 Switch to the Postgres user on all the nodes inside the cluster
 - sudo su postgres
 
-Copy id_rsa.pub file content from pg_cirrus node and run the following command on primary, standby1 and standby2 nodes
+Copy ~/.ssh/id_rsa.pub file content from pg_cirrus node and run the following command on primary, standby1 and standby2 nodes
 - mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 
 NOTE
