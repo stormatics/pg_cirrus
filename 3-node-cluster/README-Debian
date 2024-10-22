@@ -20,6 +20,7 @@ Move to the pg_cirrus node. Switch to the Postgres user.
 - sudo su postgres
 
 Copy its id_rsa.pub and run the following command on primary, standby1 and standby2 nodes
+- sudo su postgres
 - mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 
 NOTE
@@ -30,7 +31,17 @@ NOTE
 Copy the public key of the Postgres user to authorized_keys inside the Postgres user on pg_cirrus node
 ######################################################################################################
 - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
- 
+
+################
+ Clone pg_cirrus
+################
+Go to $HOME of postgres user
+- cd $HOME
+
+Clone pg_cirrus
+- git clone https://github.com/stormatics/pg_cirrus.git
+- cd pg_cirrus/3-node-cluster
+
 ###########################################
 Create a vault.yml file using Ansible vault
 ###########################################
@@ -44,14 +55,11 @@ REPUSER_PASSWORD: <your_replication_user_password>
 #########################################
 Create a file to store the vault password
 #########################################
-- touch <file_name>
-- chmod 0600 <file_name>
+- touch vault
+- chmod 0600 vault
 Write the vault password inside this file
 
 #################
 Execute pg_cirrus
 #################
-Clone pg_cirrus
-- git clone https://github.com/stormatics/pg_cirrus.git
-- cd pg_cirrus/3-node-cluster
 - python3 deploy.py
