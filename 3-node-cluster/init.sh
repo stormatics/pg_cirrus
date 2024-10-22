@@ -8,12 +8,12 @@ install_packages() {
     if [ -f /etc/redhat-release ]; then
         # Red Hat-based systems (RHEL, CentOS, etc.)
         echo "Detected Red Hat-based system. Installing packages..."
-        sudo yum install -y openssh-server net-tools python3 acl
+        sudo yum install -y openssh-server net-tools python3 acl ansible
     elif [ -f /etc/debian_version ]; then
         # Debian-based systems (Ubuntu, Debian, etc.)
         echo "Detected Debian-based system. Installing packages..."
         sudo apt-get update -y
-        sudo apt-get install -y openssh-server net-tools python3 acl
+        sudo apt-get install -y openssh-server net-tools python3 acl ansible
     else
         echo "Unsupported OS. Exiting."
         exit 1
