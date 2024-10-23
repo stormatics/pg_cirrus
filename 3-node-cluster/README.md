@@ -39,10 +39,13 @@ Clone pg_cirrus
 # Create a vault.yml file using Ansible vault
 
 - ansible-vault create vault.yml
+
 You will be prompted for vault password, after entering vault password vault file will be open.
 
 Write the following lines inside vault.yml
+
 PSQL_SERVER_PASSWORD: <your_psql_server_password>
+
 REPUSER_PASSWORD: <your_replication_user_password>
 
 
