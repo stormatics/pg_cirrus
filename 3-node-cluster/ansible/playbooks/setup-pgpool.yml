@@ -58,9 +58,9 @@
         - { regexp: "#port = 5433", replace: "port = 9999" } # Change the default port number for pgpool to 9999.
         - { regexp: "#log_statement = off", replace: "log_statement = on" } # Enable statement logging.
         - { regexp: "#log_per_node_statement = off", replace: "log_per_node_statement = on" } # Enable per-node statement logging.
-        - { regexp: "#sr_check_user = 'nobody'", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks.
+        - { regexp: "#sr_check_user = ''", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks.
         - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds.
-        - { regexp: "#health_check_user = 'nobody'", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks.
+        - { regexp: "#health_check_user = ''", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks.
         - { regexp: "#pool_passwd = 'pool_passwd'", replace: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary(\"pool_passwd = '/etc/pgpool-II/pool_passwd'\", \"pool_passwd = '/etc/pgpool2/pool_passwd'\") }}" }
         - { regexp: "#sr_check_password = ''", replace: "sr_check_password = ''" } # Leave streaming replication password blank.
         - { regexp: "#health_check_password = ''", replace: "health_check_password = ''" } # Leave health check password blank.
