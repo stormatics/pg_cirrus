@@ -47,45 +47,45 @@
         group: postgres
         mode: '0700'
 
-    # Update pgpool configurations in pgpool.conf file using Ansible's replace module.
-    - name: Update pgpool.conf file
-      replace:
+    # Update pgpool configurations in pgpool.conf file using Ansible's lineinfile module.
+     - name: Append pgpool.conf settings (no replace, no search)
+      lineinfile:
         path: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pgpool.conf', '/etc/pgpool2/pgpool.conf') }}"
-        regexp: "{{ item.regexp }}"
-        replace: "{{ item.replace }}"
+        line: "{{ item }}"
+        insertafter: EOF
+        create: yes
       with_items:
-        - { regexp: "#listen_addresses = 'localhost'", replace: "listen_addresses = '*'" } # Allow connections from any IP address.
-        - { regexp: "#port = 5433", replace: "port = 9999" } # Change the default port number for pgpool to 9999.
-        - { regexp: "#log_statement = off", replace: "log_statement = on" } # Enable statement logging.
-        - { regexp: "#log_per_node_statement = off", replace: "log_per_node_statement = on" } # Enable per-node statement logging.
-        - { regexp: "#sr_check_user = ''", replace: "sr_check_user = 'repuser'" } # Use 'repuser' for streaming replication checks.
-        - { regexp: "#health_check_period = 0", replace: "health_check_period = 10" } # Set health check interval to 10 seconds.
-        - { regexp: "#health_check_user = ''", replace: "health_check_user = 'repuser'" } # Use 'repuser' for health checks.
-        - { regexp: "#pool_passwd = 'pool_passwd'", replace: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary(\"pool_passwd = '/etc/pgpool-II/pool_passwd'\", \"pool_passwd = '/etc/pgpool2/pool_passwd'\") }}" }
-        - { regexp: "#sr_check_password = ''", replace: "sr_check_password = ''" } # Leave streaming replication password blank.
-        - { regexp: "#health_check_password = ''", replace: "health_check_password = ''" } # Leave health check password blank.
-        - { regexp: "#backend_hostname0 = 'host1'", replace: "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'" } # Set the hostname for the primary PostgreSQL node.
-        - { regexp: "#backend_hostname1 = 'host2'", replace: "backend_hostname1 = '{{ hostvars['STANDBY1']['ansible_host'] }}'" } # Set the hostname for the standby1 PostgreSQL node.
-        - { regexp: "#backend_port0 = 5432", replace: "backend_port0 = {{ PG_PORT }}" } # Sets the port for the primary PostgreSQL node.
-        - { regexp: "#backend_port1 = 5433", replace: "backend_port1 = {{ PG_PORT }}" } # Set the port for the standby1 PostgreSQL node.
-        - { regexp: "#backend_weight0 = 1", replace: "backend_weight0 = 0" } # Set the weight of the primary PostgreSQL node to 0 for load balancing.
-        - { regexp: "#backend_weight1 = 1", replace: "backend_weight1 = 0.5" } # Set the weight of the standby1 PostgreSQL node to 0.5 for load balancing.
-        - { regexp: "#backend_data_directory0 = '/data'", replace: "backend_data_directory0 = '{{ INITDB_PATH }}'" } # Data directory path for primary PostgreSQL server.
-        - { regexp: "#backend_data_directory1 = '/data1'", replace: "backend_data_directory1 = '{{ INITDB_PATH }}'" } # Data directory path for standby1 PostgreSQL server.
-        - { regexp: "#backend_flag0 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag0 = 'ALLOW_TO_FAILOVER'" } # Set backend_flag0 to ALLOW_TO_FAILOVER.
-        - { regexp: "#backend_flag1 = 'ALLOW_TO_FAILOVER'", replace: "backend_flag1 = 'ALLOW_TO_FAILOVER'" } # Set backend_flag1 to ALLOW_TO_FAILOVER.
-        - { regexp: "#failover_command = ''", replace: "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'" } # Parameters for failover_command are set.
-        - { regexp: "#follow_primary_command = ''", replace: "follow_primary_command = '{{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} {{ PGPOOL_IP }}'" } # Parameters for follow_primary_command are set.
-        - { regexp: "#load_balance_mode = on", replace: "load_balance_mode = on" } # Turn load_balance_mode to on.
-        - { regexp: "#database_redirect_preference_list = ''", replace: "database_redirect_preference_list = '.*:standby'" } # Set database_redirect_preference_list value to .*:standby .
-        - { regexp: "#statement_level_load_balance = off", replace: "statement_level_load_balance = on" } # Turn statement_level_load_balance on.
-        - { regexp: "#pcp_listen_addresses = 'localhost'", replace: "pcp_listen_addresses = '*'" } # Set pcp_listen_address to * .
-        - { regexp: "#pcp_port = 9898", replace: "pcp_port = 9898" } # Set pcp_port to 9898.
-        - { regexp: "#log_destination = 'stderr'", replace: "log_destination = 'stderr,syslog'" } # Log enabled and changed to stderr,syslog.
-        - { regexp: "#logging_collector = off", replace: "logging_collector = on" } # Logging collector turned on.
-        - { regexp: "#log_directory = '/tmp/pgpool_logs'", replace: "log_directory = '/var/log/pgpool_logs'" } # Log directory defined.
-        - { regexp: "#log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'", replace: "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'" } # Log file name defined.
-        - { regexp: "#log_file_mode = 0600", replace: "log_file_mode = 0600" } # Log file mode changed to 0600.
+        - "listen_addresses = '*'"  # Allow connections from any IP address.
+        - "port = 9999"  # Change the default port number for pgpool to 9999.
+        - "log_statement = on"  # Enable statement logging.
+        - "log_per_node_statement = on"  # Enable per-node statement logging.
+        - "sr_check_user = 'repuser'"  # Use 'repuser' for streaming replication checks.
+        - "health_check_period = 10"  # Set health check interval to 10 seconds.
+        - "health_check_user = 'repuser'"  # Use 'repuser' for health checks.
+        - "{{ (ansible_facts['os_family'] == 'RedHat') | ternary(\"pool_passwd = '/etc/pgpool-II/pool_passwd'\", \"pool_passwd = '/etc/pgpool2/pool_passwd'\") }}"
+        - "sr_check_password = ''"  # Leave streaming replication password blank.
+        - "health_check_password = ''"  # Leave health check password blank.
+        - "backend_hostname0 = {{ hostvars['PRIMARY']['ansible_host'] }}"
+        - "backend_hostname1 = {{ hostvars['STANDBY1']['ansible_host'] }}"
+        - "backend_port1 = {{ PG_PORT }}"  # Set the port for the standby1 PostgreSQL node.
+        - "backend_weight0 = 0"  # Set the weight of the primary PostgreSQL node to 0 for load balancing.
+        - "backend_weight1 = 0.5"  # Set the weight of the standby1 PostgreSQL node to 0.5 for load balancing.
+        - "backend_data_directory0 = {{ INITDB_PATH }}"  # Data directory path for primary PostgreSQL server.
+        - "backend_data_directory1 = {{ INITDB_PATH }}"  # Data directory path for standby1 PostgreSQL server.
+        - "backend_flag0 = 'ALLOW_TO_FAILOVER'"  # Set backend_flag0 to ALLOW_TO_FAILOVER.
+        - "backend_flag1 = 'ALLOW_TO_FAILOVER'"  # Set backend_flag1 to ALLOW_TO_FAILOVER.
+        - "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'"
+        - "follow_primary_command = '{{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} {{ PGPOOL_IP }}'"
+        - "load_balance_mode = on"  # Turn load_balance_mode to on.
+        - "database_redirect_preference_list = '.*:standby'"  # Set database_redirect_preference_list value to .*:standby .
+        - "statement_level_load_balance = on"  # Turn statement_level_load_balance on.
+        - "pcp_listen_addresses = '*'"  # Set pcp_listen_address to * .
+        - "pcp_port = 9898"  # Set pcp_port to 9898.
+        - "log_destination = 'stderr,syslog'"  # Log enabled and changed to stderr,syslog.
+        - "logging_collector = on"  # Logging collector turned on.
+        - "log_directory = '/var/log/pgpool_logs'"  # Log directory defined.
+        - "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'"  # Log file name defined.
+        - "log_file_mode = 0600"  # Log file mode changed to 0600.
 
     # Check if backend_hostname2 exists in pgpool.conf.
     - name: Search for existing standby2 in pgpool.conf
