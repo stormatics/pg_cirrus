@@ -67,6 +67,7 @@
         - "health_check_password = ''"  # Leave health check password blank.
         - "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'"
         - "backend_hostname1 = '{{ hostvars['STANDBY1']['ansible_host'] }}'"
+        - "backend_port0 = {{ PG_PORT }}"
         - "backend_port1 = {{ PG_PORT }}"  # Set the port for the standby1 PostgreSQL node.
         - "backend_weight0 = 0"  # Set the weight of the primary PostgreSQL node to 0 for load balancing.
         - "backend_weight1 = 0.5"  # Set the weight of the standby1 PostgreSQL node to 0.5 for load balancing.
