@@ -79,7 +79,7 @@
           '/usr/lib/postgresql/' + PG_VERSION | string + '/bin/initdb'
         ) }} -D {{ INITDB_PATH }} --pwfile ~/.pfile --encoding=utf-8 -A scram-sha-256
 
-     - name: Append PostgreSQL Configuration
+    - name: Append PostgreSQL Configuration
       become_user: postgres
       lineinfile:
         path: "{{ INITDB_PATH }}/postgresql.conf"

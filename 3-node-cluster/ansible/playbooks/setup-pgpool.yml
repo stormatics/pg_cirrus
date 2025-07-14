@@ -48,11 +48,11 @@
         mode: '0700'
 
     # Update pgpool configurations in pgpool.conf file using Ansible's lineinfile module.
-     - name: Append pgpool.conf settings (no replace, no search)
+    - name: Ensure pgpool.conf settings are present and not duplicated
       lineinfile:
         path: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pgpool.conf', '/etc/pgpool2/pgpool.conf') }}"
         line: "{{ item }}"
-        insertafter: EOF
+        state: present
         create: yes
       with_items:
         - "listen_addresses = '*'"  # Allow connections from any IP address.
@@ -65,13 +65,13 @@
         - "{{ (ansible_facts['os_family'] == 'RedHat') | ternary(\"pool_passwd = '/etc/pgpool-II/pool_passwd'\", \"pool_passwd = '/etc/pgpool2/pool_passwd'\") }}"
         - "sr_check_password = ''"  # Leave streaming replication password blank.
         - "health_check_password = ''"  # Leave health check password blank.
-        - "backend_hostname0 = {{ hostvars['PRIMARY']['ansible_host'] }}"
-        - "backend_hostname1 = {{ hostvars['STANDBY1']['ansible_host'] }}"
+        - "backend_hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'"
+        - "backend_hostname1 = '{{ hostvars['STANDBY1']['ansible_host'] }}'"
         - "backend_port1 = {{ PG_PORT }}"  # Set the port for the standby1 PostgreSQL node.
         - "backend_weight0 = 0"  # Set the weight of the primary PostgreSQL node to 0 for load balancing.
         - "backend_weight1 = 0.5"  # Set the weight of the standby1 PostgreSQL node to 0.5 for load balancing.
-        - "backend_data_directory0 = {{ INITDB_PATH }}"  # Data directory path for primary PostgreSQL server.
-        - "backend_data_directory1 = {{ INITDB_PATH }}"  # Data directory path for standby1 PostgreSQL server.
+        - "backend_data_directory0 = '{{ INITDB_PATH }}'"  # Data directory path for primary PostgreSQL server.
+        - "backend_data_directory1 = '{{ INITDB_PATH }}'"  # Data directory path for standby1 PostgreSQL server.
         - "backend_flag0 = 'ALLOW_TO_FAILOVER'"  # Set backend_flag0 to ALLOW_TO_FAILOVER.
         - "backend_flag1 = 'ALLOW_TO_FAILOVER'"  # Set backend_flag1 to ALLOW_TO_FAILOVER.
         - "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'"
