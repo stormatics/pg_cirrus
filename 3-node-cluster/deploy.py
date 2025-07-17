@@ -2,6 +2,7 @@
 # This is the main python file to execute pg_cirrus.
 
 # Importing required python libraries.
+import json
 import subprocess
 import os
 import getpass
@@ -9,6 +10,19 @@ import stat
 import pwd
 import ipaddress
 import sys
+
+CONFIG_FILE = "saved_config.json"
+def load_config():
+    """Load saved config from disk, or return None if it doesn't exist."""
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    return None
+
+def save_config(config):
+    """Save config dictionary to disk."""
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f, indent=4)
 
 # Function to execute setup-pgdg-repo.yml playbook on localhost.
 def EXECUTE_PGDG_PLAYBOOK():
@@ -244,42 +258,69 @@ def GET_VALID_SUBNET():
 
 # Main function to execute pg_cirrus.
 def main():
-  print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
+    print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
-  VAULT_PASSWORD_FILE = GET_VAULT_PASSWORD_FILE()
-  print("\n")
+    standby_ips = []  # ✅ Make sure standby_ips is always defined
+    config = load_config()
 
-  print("Getting latest PostgreSQL stable version ...")
-  PG_VERSION = GET_POSTGRESQL_VERSION()
+    if not config:
+        print("💡 First run detected: please enter the following details:")
 
-  print("\n")
-  PG_PORT = GET_POSTGRESQL_PORT()
+        # Collect inputs
+        vault_password_file = GET_VAULT_PASSWORD_FILE()
+        print()
+        cluster_subnet = GET_VALID_SUBNET()
+        print()
+        primary_ip = GET_VALID_IP("Primary PostgreSQL Server IP address: ", cluster_subnet)
+        print()
+        standby1_ip = GET_VALID_IP("Standby 1 IP address: ", cluster_subnet, [{'IP': primary_ip}])
+        print()
+        standby2_ip = GET_VALID_IP("Standby 2 IP address: ", cluster_subnet,
+                                   [{'IP': primary_ip}, {'IP': standby1_ip}])
+        print()
+        pgpool_ip = GET_VALID_IP("IP address of this node to setup pgpool: ", cluster_subnet,
+                                 [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}])
+        print()
 
-  print("\n")
-  INITDB_PATH = GET_DATA_DIRECTORY_PATH()
+        standby_ips = [standby1_ip, standby2_ip]  # ✅ Assign list here
 
-  print("\n")
-  CLUSTER_SUBNET = GET_VALID_SUBNET()
+        config = {
+            "vault_password_file": vault_password_file,
+            "cluster_subnet": cluster_subnet,
+            "primary_ip": primary_ip,
+            "standby_ips": standby_ips,
+            "pgpool_ip": pgpool_ip
+        }
+        save_config(config)
+        print("\n✅ Configuration saved to", CONFIG_FILE, "\n")
+    else:
+        print("🔁 Loaded configuration from", CONFIG_FILE)
+        print(json.dumps(config, indent=4), "\n")
+        vault_password_file = config["vault_password_file"]
+        cluster_subnet = config["cluster_subnet"]
+        primary_ip = config["primary_ip"]
+        standby_ips = config["standby_ips"]  # ✅ Still defined properly
+        pgpool_ip = config["pgpool_ip"]
 
-  print("\n")
-  PRIMARY_IP = GET_VALID_IP("Primary PostgreSQL Server IP address: ", CLUSTER_SUBNET)
+    # Gather remaining required values
+    PG_VERSION = GET_POSTGRESQL_VERSION()
+    PG_PORT = GET_POSTGRESQL_PORT()
+    INITDB_PATH = GET_DATA_DIRECTORY_PATH()
 
-  print("\n")
-  STANDBY_COUNT = 2
-  STANDBY_SERVERS = []
-  for i in range(1, STANDBY_COUNT + 1):
-    STANDBY_IP = GET_VALID_IP("Standby " + str(i) + " IP address: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
-    REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
-    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
+    # ✅ Build standby server structures
+    STANDBY_SERVERS = []
+    for ip in standby_ips:
+        REPLICATION_SLOT = "slot_" + ip.replace(".", "_")
+        STANDBY_SERVERS.append({"IP": ip, "REPLICATION_SLOT": REPLICATION_SLOT})
 
-  print("\n")
-  PGPOOL_IP = GET_VALID_IP("IP address of this node to setup pgpool: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
+    # ✅ Generate necessary files
+    GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH,
+                      cluster_subnet, STANDBY_SERVERS, pgpool_ip)
+    GENERATE_INVENTORY_FILE(primary_ip, STANDBY_SERVERS)
 
-  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP)
-  GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
-
-  EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)
+    # ✅ Run the playbooks
+    EXECUTE_PLAYBOOKS(vault_password_file)
 
 if __name__ == "__main__":
-  main()
+    main()
 
