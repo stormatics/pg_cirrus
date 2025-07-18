@@ -146,4 +146,4 @@
       copy:
         dest: "~/.pcppass"
         mode: 0600
-        content: "{{ PGPOOL_IP }}:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
+        content: "localhost:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
