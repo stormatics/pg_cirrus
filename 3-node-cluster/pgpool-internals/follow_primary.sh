@@ -55,4 +55,4 @@ ssh postgres@$NODE_HOST "PGPASSFILE=~/.pgpass psql -d postgres -w -p $PG_PORT -c
 ssh postgres@$NODE_HOST "psql -d postgres -w -p $PG_PORT -c \"SELECT pg_reload_conf();\""
 
 # Attach the standby node back to pgpool.
-ssh postgres@$NODE_HOST "pcp_attach_node -w -h $PGPOOL_IP -U postgres -p 9898 -n ${NODE_ID}"
+ssh postgres@$NODE_HOST "pcp_attach_node -w -h localhost -U postgres -p 9898 -n ${NODE_ID}"

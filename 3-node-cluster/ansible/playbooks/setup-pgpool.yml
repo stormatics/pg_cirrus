@@ -75,8 +75,8 @@
         - "backend_data_directory1 = '{{ INITDB_PATH }}'"  # Data directory path for standby1 PostgreSQL server.
         - "backend_flag0 = 'ALLOW_TO_FAILOVER'"  # Set backend_flag0 to ALLOW_TO_FAILOVER.
         - "backend_flag1 = 'ALLOW_TO_FAILOVER'"  # Set backend_flag1 to ALLOW_TO_FAILOVER.
-        - "failover_command = '{{ ansible_env.PWD }}/../../pgpool-internals/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'"
-        - "follow_primary_command = '{{ ansible_env.PWD }}/../../pgpool-internals/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} {{ PGPOOL_IP }}'"
+        - "failover_command ='/home/postgres/stormatics/pg_cirrus/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_VERSION }} {{ PG_PORT }}'"
+        - "follow_primary_command = '/home/postgres/stormatics/pg_cirrus/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S {{ PG_PORT }} {{ PGPOOL_IP }}'"
         - "load_balance_mode = on"  # Turn load_balance_mode to on.
         - "database_redirect_preference_list = '.*:standby'"  # Set database_redirect_preference_list value to .*:standby .
         - "statement_level_load_balance = on"  # Turn statement_level_load_balance on.
@@ -170,8 +170,17 @@
         name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
         state: stopped
 
+    - name: Copy entire folder
+      copy:
+        src: /home/postgres/pg_cirrus/3-node-cluster/pgpool-internals/
+        dest: /home/postgres/stormatics/pg_cirrus/
+        owner: postgres
+        group: postgres
+        mode: '0755'
+
     # Start pgpool2 srevice on localhost.
     - name: Start pgpool2 service
       service:
         name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
         state: started
+
