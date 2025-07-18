@@ -4,7 +4,7 @@
 
 # Configure pgpool on local host.
 - name: Configure pgpool2
-  hosts: localhost
+  hosts: all
   become: true
   tasks:
 
@@ -87,6 +87,30 @@
         - "log_directory = '/var/log/pgpool_logs'"  # Log directory defined.
         - "log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log'"  # Log file name defined.
         - "log_file_mode = 0600"  # Log file mode changed to 0600.
+        - "use_watchdog = on"
+        - "hostname0 = '{{ hostvars['PRIMARY']['ansible_host'] }}'"
+        - "wd_port0 = 9000"
+        - "pgpool_port0 = 9999"
+        - "hostname1 = '{{ hostvars['STANDBY1']['ansible_host'] }}'"
+        - "wd_port1 = 9000"
+        - "pgpool_port1 = 9999"
+        - "hostname2 = '{{ hostvars['STANDBY2']['ansible_host'] }}'"
+        - "wd_port2 = 9000"
+        - "pgpool_port2 = 9999"
+        - "wd_priority = 1"
+        - "wd_authkey = 'secretkey'"
+        - "wd_monitoring_interfaces_list = 'ens5'"
+        - "heartbeat_hostname0 = '{{ hostvars['STANDBY1']['ansible_host'] }}'"
+        - "heartbeat_port0 = 9694"
+        - "heartbeat_device0 = 'ens5'"
+        - "heartbeat_hostname1 = '{{ hostvars['STANDBY2']['ansible_host'] }}'"
+        - "heartbeat_port1 = 9694"
+        - "heartbeat_device1 = 'ens5'"
+        - "heartbeat_hostname2 = '{{ hostvars['PRIMARY']['ansible_host'] }}'"
+        - "heartbeat_port2 = 9694"
+        - "heartbeat_device2 = 'ens5'"
+        - "wd_heartbeat_keepalive = 2"
+        - "wd_heartbeat_deadtime = 10"
 
     # Check if backend_hostname2 exists in pgpool.conf.
     - name: Search for existing standby2 in pgpool.conf
