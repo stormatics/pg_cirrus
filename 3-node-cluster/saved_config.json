@@ -1,0 +1,10 @@
+{
+    "vault_password_file": "vault",
+    "cluster_subnet": "0.0.0.0/0",
+    "primary_ip": "172.25.0.11",
+    "standby_ips": [
+        "172.25.0.12",
+        "172.25.0.13"
+    ],
+    "pgpool_ip": "172.25.0.10"
+}
