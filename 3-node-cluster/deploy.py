@@ -11,6 +11,21 @@ import pwd
 import ipaddress
 import sys
 
+class DualLogger:
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a", buffering=1)  # Line-buffered
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+sys.stdout = sys.stderr = DualLogger("project_terminal.log")
+
 CONFIG_FILE = "saved_config.json"
 def load_config():
     """Load saved config from disk, or return None if it doesn't exist."""
@@ -26,12 +41,36 @@ def save_config(config):
 
 # Function to execute setup-pgdg-repo.yml playbook on localhost.
 def EXECUTE_PGDG_PLAYBOOK():
-    subprocess.run(['ansible-playbook', 'ansible/playbooks/setup-pgdg-repo.yml'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        process = subprocess.Popen(
+            ['ansible-playbook', 'ansible/playbooks/setup-pgdg-repo.yml'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
+    except subprocess.CalledProcessError:
+        print("Error: Failed to execute setup-pgdg-repo.yml playbook.")
 
 # Function to execute setup-primary.yml playbook on primary server.
 def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
+        process = subprocess.Popen(
+            ['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file=" + VAULT_PASSWORD_FILE],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
     except subprocess.CalledProcessError as ERROR:
         print("Error: Failed to execute setup-primary.yml playbook.")
         raise ERROR
@@ -39,18 +78,38 @@ def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
 # Function to execute setup-standby.yml playbook on standby servers.
 def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
-    except subprocess.CalledProcessError as ERROR:
+        process = subprocess.Popen(
+            ['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file=" + VAULT_PASSWORD_FILE],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
+    except subprocess.CalledProcessError:
         print("Error: Failed to execute setup-standby.yml playbook.")
-        raise ERROR
+        raise
 
 # Function to execute setup-pgpool.yml playbook on localhost.
 def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
-    except subprocess.CalledProcessError as ERROR:
+        process = subprocess.Popen(
+            ['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file=" + VAULT_PASSWORD_FILE],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
+    except subprocess.CalledProcessError:
         print("Error: Failed to execute setup-pgpool.yml playbook.")
-        raise ERROR
+        raise
 
 # Function to generate inventory file at runtime.
 def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):

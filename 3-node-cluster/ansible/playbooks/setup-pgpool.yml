@@ -184,4 +184,21 @@
       service:
         name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
         state: started
+    
+    - name: Create pgpool_node_id file based on role
+      copy:
+        dest: /etc/pgpool2/pgpool_node_id
+        content: |
+          {% if inventory_hostname == 'PRIMARY' %}
+          primary node:0
+          {% elif inventory_hostname == 'STANDBY1' %}
+          standby1 node:1
+          {% elif inventory_hostname == 'STANDBY2' %}
+          standby2 node:2
+          {% else %}
+          unknown
+          {% endif %}
+        owner: postgres
+        group: postgres
+        mode: '0644'
 
