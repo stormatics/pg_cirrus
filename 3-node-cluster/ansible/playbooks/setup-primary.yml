@@ -47,14 +47,14 @@
         name:
           - python3-psycopg2
         state: present
-
+    
     # Create .pfile with permission 0600 to store PSQL_SERVER_PASSWORD value from vault.yml.
     - name: Creating password file
       become_user: postgres
       copy:
         dest: "~/.pfile"
         mode: 0600
-        content: "{{ PSQL_SERVER_PASSWORD }}"
+        content: "{{ PSQL_SERVER_PASSWORD }}"      
 
     # Check if data directory is empty.
     - name: Check if the data directory is empty
