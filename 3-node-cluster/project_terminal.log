@@ -660,3 +660,1391 @@ PRIMARY                    : ok=14   changed=5    unreachable=0    failed=0    s
 STANDBY1                   : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
 STANDBY2                   : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
 
+Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup
+
+
+🔁 Loaded configuration from saved_config.json
+{
+    "vault_password_file": "vault",
+    "cluster_subnet": "0.0.0.0/0",
+    "primary_ip": "172.31.45.126",
+    "standby_ips": [
+        "172.31.44.12",
+        "172.31.40.191"
+    ],
+    "pgpool_ip": "172.31.35.243"
+} 
+
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [Install PostgreSQL] ******************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for localhost
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [localhost]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [localhost]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [localhost]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [localhost]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [localhost]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [localhost]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [localhost]
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=5    changed=1    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+
+Enter PostgreSQL version (Latest: 17): Enter the PostgreSQL port number: (Default: 5432): Enter the Data Directory Path: (Default: /home/postgres/stormatics/pg_cirrus/data): Generating conf.yml ...
+Generating inventory file ...
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [PRIMARY]
+
+TASK [Load common variables] ***************************************************
+ok: [PRIMARY]
+
+TASK [Load vault variables] ****************************************************
+ok: [PRIMARY]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for PRIMARY
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [PRIMARY]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [PRIMARY]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [PRIMARY]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [PRIMARY]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [PRIMARY]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [PRIMARY]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [PRIMARY]
+
+TASK [Install PostgreSQL-17] ***************************************************
+ok: [PRIMARY]
+
+TASK [Creating data directory] *************************************************
+changed: [PRIMARY]
+
+TASK [Stop already running service] ********************************************
+changed: [PRIMARY]
+
+TASK [Installing python3-psycopg2] *********************************************
+ok: [PRIMARY]
+
+TASK [Creating password file] **************************************************
+ok: [PRIMARY]
+
+TASK [Check if the data directory is empty] ************************************
+ok: [PRIMARY]
+
+TASK [Display message and exit if the data directory is not empty] *************
+skipping: [PRIMARY]
+
+TASK [Initialize the data directory for the Primary PostgreSQL server] *********
+changed: [PRIMARY]
+
+TASK [Append PostgreSQL Configuration] *****************************************
+changed: [PRIMARY] => (item=listen_addresses = '*')
+changed: [PRIMARY] => (item=wal_level = replica)
+changed: [PRIMARY] => (item=max_wal_senders = 10)
+changed: [PRIMARY] => (item=wal_keep_size = 1GB)
+
+TASK [Start the server] ********************************************************
+changed: [PRIMARY]
+
+TASK [Creating a replication slots] ********************************************
+[WARNING]: Database name has not been passed, used default database to connect
+to.
+ok: [PRIMARY] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'})
+ok: [PRIMARY] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'})
+
+TASK [Creating a replication user] *********************************************
+changed: [PRIMARY]
+
+TASK [Update pg_hba.conf] ******************************************************
+changed: [PRIMARY]
+
+TASK [Restart the server] ******************************************************
+changed: [PRIMARY]
+
+TASK [Install pgpool2] *********************************************************
+ok: [PRIMARY]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [PRIMARY]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [PRIMARY]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [PRIMARY]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [PRIMARY]
+
+TASK [Stopping pgpool2 service] ************************************************
+ok: [PRIMARY]
+
+TASK [Creating pcppass file] ***************************************************
+ok: [PRIMARY]
+
+PLAY RECAP *********************************************************************
+PRIMARY                    : ok=25   changed=10   unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+
+
+PLAY [Setup Standby servers] ***************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Load common variables] ***************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Load vault variables] ****************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for STANDBY1, STANDBY2
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install PostgreSQL-17] ***************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Create data directory] ***************************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Set permissions for data directory] **************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Stop already running service] ********************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Creating .pgpass file] ***************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Check if the data directory is empty] ************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Display error message and exit if the directory is not empty] ************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Run pg_basebackup for standby servers] ***********************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Update primary_slot_name in postgresql.conf] *****************************
+skipping: [STANDBY2] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'}) 
+changed: [STANDBY1] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'})
+skipping: [STANDBY1] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'}) 
+changed: [STANDBY2] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'})
+
+TASK [Start the standby server] ************************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Install pgpool2] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Stopping pgpool2 service] ************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Creating pcppass file] ***************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+PLAY RECAP *********************************************************************
+STANDBY1                   : ok=21   changed=8    unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+STANDBY2                   : ok=21   changed=8    unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+
+
+PLAY [Configure pgpool2] *******************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+ok: [PRIMARY]
+
+TASK [Load common variables] ***************************************************
+ok: [PRIMARY]
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Load vault variables] ****************************************************
+ok: [PRIMARY]
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Install pgpool2] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+ok: [PRIMARY]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Create pgpool_logs directory in /var/log/] *******************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+ok: [PRIMARY]
+
+TASK [Ensure pgpool.conf settings are present and not duplicated] **************
+ok: [STANDBY1] => (item=listen_addresses = '*')
+ok: [STANDBY2] => (item=listen_addresses = '*')
+ok: [PRIMARY] => (item=listen_addresses = '*')
+ok: [STANDBY1] => (item=port = 9999)
+ok: [STANDBY2] => (item=port = 9999)
+ok: [PRIMARY] => (item=port = 9999)
+ok: [STANDBY1] => (item=log_statement = on)
+ok: [PRIMARY] => (item=log_statement = on)
+ok: [STANDBY2] => (item=log_statement = on)
+ok: [PRIMARY] => (item=log_per_node_statement = on)
+ok: [STANDBY1] => (item=log_per_node_statement = on)
+ok: [STANDBY2] => (item=log_per_node_statement = on)
+ok: [STANDBY1] => (item=sr_check_user = 'repuser')
+ok: [STANDBY2] => (item=sr_check_user = 'repuser')
+ok: [PRIMARY] => (item=sr_check_user = 'repuser')
+ok: [STANDBY1] => (item=health_check_period = 10)
+ok: [STANDBY2] => (item=health_check_period = 10)
+ok: [PRIMARY] => (item=health_check_period = 10)
+ok: [STANDBY1] => (item=health_check_user = 'repuser')
+ok: [STANDBY2] => (item=health_check_user = 'repuser')
+ok: [PRIMARY] => (item=health_check_user = 'repuser')
+ok: [STANDBY1] => (item=pool_passwd = '/etc/pgpool2/pool_passwd')
+ok: [STANDBY2] => (item=pool_passwd = '/etc/pgpool2/pool_passwd')
+ok: [PRIMARY] => (item=pool_passwd = '/etc/pgpool2/pool_passwd')
+ok: [STANDBY1] => (item=sr_check_password = '')
+ok: [STANDBY2] => (item=sr_check_password = '')
+ok: [PRIMARY] => (item=sr_check_password = '')
+ok: [STANDBY1] => (item=health_check_password = '')
+ok: [STANDBY2] => (item=health_check_password = '')
+ok: [PRIMARY] => (item=health_check_password = '')
+ok: [STANDBY2] => (item=backend_hostname0 = '172.31.45.126')
+ok: [STANDBY1] => (item=backend_hostname0 = '172.31.45.126')
+ok: [PRIMARY] => (item=backend_hostname0 = '172.31.45.126')
+ok: [STANDBY2] => (item=backend_hostname1 = '172.31.44.12')
+ok: [STANDBY1] => (item=backend_hostname1 = '172.31.44.12')
+ok: [PRIMARY] => (item=backend_hostname1 = '172.31.44.12')
+ok: [STANDBY2] => (item=backend_port0 = 5432)
+ok: [STANDBY1] => (item=backend_port0 = 5432)
+ok: [PRIMARY] => (item=backend_port0 = 5432)
+ok: [STANDBY2] => (item=backend_port1 = 5432)
+ok: [STANDBY1] => (item=backend_port1 = 5432)
+ok: [PRIMARY] => (item=backend_port1 = 5432)
+ok: [STANDBY2] => (item=backend_weight0 = 0)
+ok: [STANDBY1] => (item=backend_weight0 = 0)
+ok: [PRIMARY] => (item=backend_weight0 = 0)
+ok: [STANDBY2] => (item=backend_weight1 = 0.5)
+ok: [STANDBY1] => (item=backend_weight1 = 0.5)
+ok: [PRIMARY] => (item=backend_weight1 = 0.5)
+ok: [STANDBY2] => (item=backend_data_directory0 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY1] => (item=backend_data_directory0 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [PRIMARY] => (item=backend_data_directory0 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY2] => (item=backend_data_directory1 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY1] => (item=backend_data_directory1 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [PRIMARY] => (item=backend_data_directory1 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY2] => (item=backend_flag0 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY1] => (item=backend_flag0 = 'ALLOW_TO_FAILOVER')
+ok: [PRIMARY] => (item=backend_flag0 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY2] => (item=backend_flag1 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY1] => (item=backend_flag1 = 'ALLOW_TO_FAILOVER')
+ok: [PRIMARY] => (item=backend_flag1 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY2] => (item=failover_command ='/home/postgres/stormatics/pg_cirrus/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S 17 5432')
+ok: [STANDBY1] => (item=failover_command ='/home/postgres/stormatics/pg_cirrus/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S 17 5432')
+ok: [PRIMARY] => (item=failover_command ='/home/postgres/stormatics/pg_cirrus/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S 17 5432')
+ok: [STANDBY2] => (item=follow_primary_command = '/home/postgres/stormatics/pg_cirrus/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S 5432 172.31.35.243')
+ok: [STANDBY1] => (item=follow_primary_command = '/home/postgres/stormatics/pg_cirrus/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S 5432 172.31.35.243')
+ok: [PRIMARY] => (item=follow_primary_command = '/home/postgres/stormatics/pg_cirrus/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S 5432 172.31.35.243')
+ok: [STANDBY2] => (item=load_balance_mode = on)
+ok: [STANDBY1] => (item=load_balance_mode = on)
+ok: [PRIMARY] => (item=load_balance_mode = on)
+ok: [STANDBY2] => (item=database_redirect_preference_list = '.*:standby')
+ok: [STANDBY1] => (item=database_redirect_preference_list = '.*:standby')
+ok: [PRIMARY] => (item=database_redirect_preference_list = '.*:standby')
+ok: [STANDBY2] => (item=statement_level_load_balance = on)
+ok: [STANDBY1] => (item=statement_level_load_balance = on)
+ok: [PRIMARY] => (item=statement_level_load_balance = on)
+ok: [STANDBY2] => (item=pcp_listen_addresses = '*')
+ok: [STANDBY1] => (item=pcp_listen_addresses = '*')
+ok: [PRIMARY] => (item=pcp_listen_addresses = '*')
+ok: [STANDBY2] => (item=pcp_port = 9898)
+ok: [STANDBY1] => (item=pcp_port = 9898)
+ok: [PRIMARY] => (item=pcp_port = 9898)
+ok: [STANDBY2] => (item=log_destination = 'stderr,syslog')
+ok: [STANDBY1] => (item=log_destination = 'stderr,syslog')
+ok: [PRIMARY] => (item=log_destination = 'stderr,syslog')
+ok: [STANDBY2] => (item=logging_collector = on)
+ok: [STANDBY1] => (item=logging_collector = on)
+ok: [PRIMARY] => (item=logging_collector = on)
+ok: [STANDBY2] => (item=log_directory = '/var/log/pgpool_logs')
+ok: [STANDBY1] => (item=log_directory = '/var/log/pgpool_logs')
+ok: [PRIMARY] => (item=log_directory = '/var/log/pgpool_logs')
+ok: [STANDBY2] => (item=log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log')
+ok: [STANDBY1] => (item=log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log')
+ok: [PRIMARY] => (item=log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log')
+ok: [STANDBY2] => (item=log_file_mode = 0600)
+ok: [STANDBY1] => (item=log_file_mode = 0600)
+ok: [PRIMARY] => (item=log_file_mode = 0600)
+ok: [STANDBY2] => (item=use_watchdog = on)
+ok: [STANDBY1] => (item=use_watchdog = on)
+ok: [PRIMARY] => (item=use_watchdog = on)
+ok: [STANDBY2] => (item=hostname0 = '172.31.45.126')
+ok: [STANDBY1] => (item=hostname0 = '172.31.45.126')
+ok: [PRIMARY] => (item=hostname0 = '172.31.45.126')
+ok: [STANDBY2] => (item=wd_port0 = 9000)
+ok: [STANDBY1] => (item=wd_port0 = 9000)
+ok: [PRIMARY] => (item=wd_port0 = 9000)
+ok: [STANDBY2] => (item=pgpool_port0 = 9999)
+ok: [STANDBY1] => (item=pgpool_port0 = 9999)
+ok: [STANDBY2] => (item=hostname1 = '172.31.44.12')
+ok: [PRIMARY] => (item=pgpool_port0 = 9999)
+ok: [STANDBY1] => (item=hostname1 = '172.31.44.12')
+ok: [STANDBY2] => (item=wd_port1 = 9000)
+ok: [PRIMARY] => (item=hostname1 = '172.31.44.12')
+ok: [STANDBY1] => (item=wd_port1 = 9000)
+ok: [STANDBY2] => (item=pgpool_port1 = 9999)
+ok: [PRIMARY] => (item=wd_port1 = 9000)
+ok: [STANDBY1] => (item=pgpool_port1 = 9999)
+ok: [STANDBY2] => (item=hostname2 = '172.31.40.191')
+ok: [PRIMARY] => (item=pgpool_port1 = 9999)
+ok: [STANDBY1] => (item=hostname2 = '172.31.40.191')
+ok: [STANDBY2] => (item=wd_port2 = 9000)
+ok: [PRIMARY] => (item=hostname2 = '172.31.40.191')
+ok: [STANDBY1] => (item=wd_port2 = 9000)
+ok: [STANDBY2] => (item=pgpool_port2 = 9999)
+ok: [PRIMARY] => (item=wd_port2 = 9000)
+ok: [STANDBY1] => (item=pgpool_port2 = 9999)
+ok: [STANDBY2] => (item=wd_priority = 1)
+ok: [STANDBY1] => (item=wd_priority = 1)
+ok: [PRIMARY] => (item=pgpool_port2 = 9999)
+ok: [STANDBY2] => (item=wd_authkey = 'secretkey')
+ok: [STANDBY1] => (item=wd_authkey = 'secretkey')
+ok: [PRIMARY] => (item=wd_priority = 1)
+ok: [STANDBY2] => (item=wd_monitoring_interfaces_list = 'eth0')
+ok: [STANDBY1] => (item=wd_monitoring_interfaces_list = 'eth0')
+ok: [PRIMARY] => (item=wd_authkey = 'secretkey')
+ok: [STANDBY2] => (item=heartbeat_hostname0 = '172.31.44.12')
+ok: [STANDBY1] => (item=heartbeat_hostname0 = '172.31.44.12')
+ok: [PRIMARY] => (item=wd_monitoring_interfaces_list = 'eth0')
+ok: [STANDBY2] => (item=heartbeat_port0 = 9694)
+ok: [STANDBY1] => (item=heartbeat_port0 = 9694)
+ok: [PRIMARY] => (item=heartbeat_hostname0 = '172.31.44.12')
+ok: [STANDBY2] => (item=heartbeat_device0 = 'eth0')
+ok: [STANDBY1] => (item=heartbeat_device0 = 'eth0')
+ok: [PRIMARY] => (item=heartbeat_port0 = 9694)
+ok: [STANDBY2] => (item=heartbeat_hostname1 = '172.31.40.191')
+ok: [STANDBY1] => (item=heartbeat_hostname1 = '172.31.40.191')
+ok: [PRIMARY] => (item=heartbeat_device0 = 'eth0')
+ok: [STANDBY2] => (item=heartbeat_port1 = 9694)
+ok: [STANDBY1] => (item=heartbeat_port1 = 9694)
+ok: [PRIMARY] => (item=heartbeat_hostname1 = '172.31.40.191')
+ok: [STANDBY2] => (item=heartbeat_device1 = 'eth0')
+ok: [STANDBY1] => (item=heartbeat_device1 = 'eth0')
+ok: [PRIMARY] => (item=heartbeat_port1 = 9694)
+ok: [STANDBY2] => (item=heartbeat_hostname2 = '172.31.45.126')
+ok: [STANDBY1] => (item=heartbeat_hostname2 = '172.31.45.126')
+ok: [PRIMARY] => (item=heartbeat_device1 = 'eth0')
+ok: [STANDBY2] => (item=heartbeat_port2 = 9694)
+ok: [STANDBY1] => (item=heartbeat_port2 = 9694)
+ok: [PRIMARY] => (item=heartbeat_hostname2 = '172.31.45.126')
+ok: [STANDBY2] => (item=heartbeat_device2 = 'eth0')
+ok: [STANDBY1] => (item=heartbeat_device2 = 'eth0')
+ok: [PRIMARY] => (item=heartbeat_port2 = 9694)
+ok: [STANDBY2] => (item=wd_heartbeat_keepalive = 2)
+ok: [STANDBY1] => (item=wd_heartbeat_keepalive = 2)
+ok: [PRIMARY] => (item=heartbeat_device2 = 'eth0')
+ok: [STANDBY2] => (item=wd_heartbeat_deadtime = 10)
+ok: [STANDBY1] => (item=wd_heartbeat_deadtime = 10)
+ok: [PRIMARY] => (item=wd_heartbeat_keepalive = 2)
+ok: [STANDBY2] => (item=delegate_IP = '172.25.0.14')
+ok: [STANDBY1] => (item=delegate_IP = '172.25.0.14')
+ok: [PRIMARY] => (item=wd_heartbeat_deadtime = 10)
+ok: [PRIMARY] => (item=delegate_IP = '172.25.0.14')
+
+TASK [Search for existing standby2 in pgpool.conf] *****************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+changed: [PRIMARY]
+
+TASK [Add configurations for standby2 to pgpool.conf if not already present] ***
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [PRIMARY]
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [PRIMARY]
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Create a pool_passwd file] ***********************************************
+changed: [PRIMARY]
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Ensure PostgreSQL socket directory exists] *******************************
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Stopping the already running pgpool2 service] ****************************
+ok: [PRIMARY]
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Copy entire folder] ******************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+ok: [PRIMARY]
+
+TASK [Start pgpool2 service] ***************************************************
+changed: [PRIMARY]
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Create pgpool_node_id file based on role] ********************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+changed: [PRIMARY]
+
+PLAY RECAP *********************************************************************
+PRIMARY                    : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+STANDBY1                   : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+STANDBY2                   : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+
+Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup
+
+
+🔁 Loaded configuration from saved_config.json
+{
+    "vault_password_file": "vault",
+    "cluster_subnet": "0.0.0.0/0",
+    "primary_ip": "172.31.45.126",
+    "standby_ips": [
+        "172.31.44.12",
+        "172.31.40.191"
+    ],
+    "pgpool_ip": "172.31.35.243"
+} 
+
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [Install PostgreSQL] ******************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for localhost
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [localhost]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [localhost]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [localhost]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [localhost]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [localhost]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [localhost]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [localhost]
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=5    changed=1    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+
+Enter PostgreSQL version (Latest: 17): Enter the PostgreSQL port number: (Default: 5432): Enter the Data Directory Path: (Default: /home/postgres/stormatics/pg_cirrus/data): Generating conf.yml ...
+Generating inventory file ...
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [PRIMARY]
+
+TASK [Load common variables] ***************************************************
+ok: [PRIMARY]
+
+TASK [Load vault variables] ****************************************************
+ok: [PRIMARY]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for PRIMARY
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [PRIMARY]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [PRIMARY]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [PRIMARY]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [PRIMARY]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [PRIMARY]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [PRIMARY]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [PRIMARY]
+
+TASK [Install PostgreSQL-17] ***************************************************
+ok: [PRIMARY]
+
+TASK [Creating data directory] *************************************************
+changed: [PRIMARY]
+
+TASK [Stop already running service] ********************************************
+changed: [PRIMARY]
+
+TASK [Installing python3-psycopg2] *********************************************
+ok: [PRIMARY]
+
+TASK [Creating password file] **************************************************
+ok: [PRIMARY]
+
+TASK [Check if the data directory is empty] ************************************
+ok: [PRIMARY]
+
+TASK [Display message and exit if the data directory is not empty] *************
+skipping: [PRIMARY]
+
+TASK [Initialize the data directory for the Primary PostgreSQL server] *********
+changed: [PRIMARY]
+
+TASK [Append PostgreSQL Configuration] *****************************************
+changed: [PRIMARY] => (item=listen_addresses = '*')
+changed: [PRIMARY] => (item=wal_level = replica)
+changed: [PRIMARY] => (item=max_wal_senders = 10)
+changed: [PRIMARY] => (item=wal_keep_size = 1GB)
+
+TASK [Start the server] ********************************************************
+changed: [PRIMARY]
+
+TASK [Creating a replication slots] ********************************************
+[WARNING]: Database name has not been passed, used default database to connect
+to.
+ok: [PRIMARY] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'})
+ok: [PRIMARY] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'})
+
+TASK [Creating a replication user] *********************************************
+changed: [PRIMARY]
+
+TASK [Update pg_hba.conf] ******************************************************
+changed: [PRIMARY]
+
+TASK [Restart the server] ******************************************************
+changed: [PRIMARY]
+
+TASK [Install pgpool2] *********************************************************
+ok: [PRIMARY]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [PRIMARY]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [PRIMARY]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [PRIMARY]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [PRIMARY]
+
+TASK [Stopping pgpool2 service] ************************************************
+ok: [PRIMARY]
+
+TASK [Creating pcppass file] ***************************************************
+ok: [PRIMARY]
+
+PLAY RECAP *********************************************************************
+PRIMARY                    : ok=25   changed=10   unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+
+
+PLAY [Setup Standby servers] ***************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Load common variables] ***************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Load vault variables] ****************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for STANDBY1, STANDBY2
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install PostgreSQL-17] ***************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Create data directory] ***************************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Set permissions for data directory] **************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Stop already running service] ********************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Creating .pgpass file] ***************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Check if the data directory is empty] ************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Display error message and exit if the directory is not empty] ************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Run pg_basebackup for standby servers] ***********************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Update primary_slot_name in postgresql.conf] *****************************
+skipping: [STANDBY2] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'}) 
+changed: [STANDBY1] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'})
+skipping: [STANDBY1] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'}) 
+changed: [STANDBY2] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'})
+
+TASK [Start the standby server] ************************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Install pgpool2] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Stopping pgpool2 service] ************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Creating pcppass file] ***************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+PLAY RECAP *********************************************************************
+STANDBY1                   : ok=21   changed=8    unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+STANDBY2                   : ok=21   changed=8    unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+
+ERROR! We were unable to read either as JSON nor YAML, these are the errors we got from each:
+JSON: Expecting value: line 1 column 1 (char 0)
+
+Syntax Error while loading YAML.
+  did not find expected key
+
+The error appears to be in '/home/postgres/pg_cirrus/3-node-cluster/ansible/playbooks/setup-pgpool.yml': line 204, column 11, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+        mode: '0644'
+          B
+          ^ here
+Error: Failed to execute setup-pgpool.yml playbook.
+Exiting pg_cirrus.
+Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup
+
+
+🔁 Loaded configuration from saved_config.json
+{
+    "vault_password_file": "vault",
+    "cluster_subnet": "0.0.0.0/0",
+    "primary_ip": "172.31.45.126",
+    "standby_ips": [
+        "172.31.44.12",
+        "172.31.40.191"
+    ],
+    "pgpool_ip": "172.31.35.243"
+} 
+
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [Install PostgreSQL] ******************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for localhost
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [localhost]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [localhost]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [localhost]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [localhost]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [localhost]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [localhost]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [localhost]
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=5    changed=1    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+
+Enter PostgreSQL version (Latest: 17): Enter the PostgreSQL port number: (Default: 5432): Enter the Data Directory Path: (Default: /home/postgres/stormatics/pg_cirrus/data): Generating conf.yml ...
+Generating inventory file ...
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [PRIMARY]
+
+TASK [Load common variables] ***************************************************
+ok: [PRIMARY]
+
+TASK [Load vault variables] ****************************************************
+ok: [PRIMARY]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for PRIMARY
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [PRIMARY]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [PRIMARY]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [PRIMARY]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [PRIMARY]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [PRIMARY]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [PRIMARY]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [PRIMARY]
+
+TASK [Install PostgreSQL-17] ***************************************************
+ok: [PRIMARY]
+
+TASK [Creating data directory] *************************************************
+changed: [PRIMARY]
+
+TASK [Stop already running service] ********************************************
+changed: [PRIMARY]
+
+TASK [Installing python3-psycopg2] *********************************************
+ok: [PRIMARY]
+
+TASK [Creating password file] **************************************************
+ok: [PRIMARY]
+
+TASK [Check if the data directory is empty] ************************************
+ok: [PRIMARY]
+
+TASK [Display message and exit if the data directory is not empty] *************
+skipping: [PRIMARY]
+
+TASK [Initialize the data directory for the Primary PostgreSQL server] *********
+changed: [PRIMARY]
+
+TASK [Append PostgreSQL Configuration] *****************************************
+changed: [PRIMARY] => (item=listen_addresses = '*')
+changed: [PRIMARY] => (item=wal_level = replica)
+changed: [PRIMARY] => (item=max_wal_senders = 10)
+changed: [PRIMARY] => (item=wal_keep_size = 1GB)
+
+TASK [Start the server] ********************************************************
+changed: [PRIMARY]
+
+TASK [Creating a replication slots] ********************************************
+[WARNING]: Database name has not been passed, used default database to connect
+to.
+ok: [PRIMARY] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'})
+ok: [PRIMARY] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'})
+
+TASK [Creating a replication user] *********************************************
+changed: [PRIMARY]
+
+TASK [Update pg_hba.conf] ******************************************************
+changed: [PRIMARY]
+
+TASK [Restart the server] ******************************************************
+changed: [PRIMARY]
+
+TASK [Install pgpool2] *********************************************************
+ok: [PRIMARY]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [PRIMARY]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [PRIMARY]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [PRIMARY]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [PRIMARY]
+
+TASK [Stopping pgpool2 service] ************************************************
+ok: [PRIMARY]
+
+TASK [Creating pcppass file] ***************************************************
+ok: [PRIMARY]
+
+PLAY RECAP *********************************************************************
+PRIMARY                    : ok=25   changed=10   unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+
+
+PLAY [Setup Standby servers] ***************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Load common variables] ***************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Load vault variables] ****************************************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for STANDBY1, STANDBY2
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Download the PGDG RPM package] *******************************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install PostgreSQL-17] ***************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Create data directory] ***************************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Set permissions for data directory] **************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Stop already running service] ********************************************
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Creating .pgpass file] ***************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Check if the data directory is empty] ************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Display error message and exit if the directory is not empty] ************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Run pg_basebackup for standby servers] ***********************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Update primary_slot_name in postgresql.conf] *****************************
+skipping: [STANDBY2] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'}) 
+changed: [STANDBY1] => (item={'NAME': 'STANDBY1', 'PG_REPLICATION_SLOT': 'slot_172_31_44_12'})
+skipping: [STANDBY1] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'}) 
+changed: [STANDBY2] => (item={'NAME': 'STANDBY2', 'PG_REPLICATION_SLOT': 'slot_172_31_40_191'})
+
+TASK [Start the standby server] ************************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Install pgpool2] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Stopping pgpool2 service] ************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+TASK [Creating pcppass file] ***************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+
+PLAY RECAP *********************************************************************
+STANDBY1                   : ok=21   changed=8    unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+STANDBY2                   : ok=21   changed=8    unreachable=0    failed=0    skipped=7    rescued=0    ignored=0   
+
+
+PLAY [Configure pgpool2] *******************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+ok: [PRIMARY]
+
+TASK [Load common variables] ***************************************************
+ok: [PRIMARY]
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Load vault variables] ****************************************************
+ok: [PRIMARY]
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Install pgpool2] *********************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+ok: [PRIMARY]
+
+TASK [Install pgpool-II release RPM] *******************************************
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Install pgpool-II for the specified PostgreSQL version on RHEL] **********
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Create pgpool_logs directory in /var/log/] *******************************
+ok: [STANDBY1]
+ok: [STANDBY2]
+ok: [PRIMARY]
+
+TASK [Ensure pgpool.conf settings are present and not duplicated] **************
+ok: [STANDBY2] => (item=listen_addresses = '*')
+ok: [STANDBY1] => (item=listen_addresses = '*')
+ok: [PRIMARY] => (item=listen_addresses = '*')
+ok: [STANDBY2] => (item=port = 9999)
+ok: [STANDBY1] => (item=port = 9999)
+ok: [PRIMARY] => (item=port = 9999)
+ok: [STANDBY1] => (item=log_statement = on)
+ok: [STANDBY2] => (item=log_statement = on)
+ok: [PRIMARY] => (item=log_statement = on)
+ok: [STANDBY1] => (item=log_per_node_statement = on)
+ok: [STANDBY2] => (item=log_per_node_statement = on)
+ok: [PRIMARY] => (item=log_per_node_statement = on)
+ok: [STANDBY1] => (item=sr_check_user = 'repuser')
+ok: [STANDBY2] => (item=sr_check_user = 'repuser')
+ok: [PRIMARY] => (item=sr_check_user = 'repuser')
+ok: [STANDBY1] => (item=health_check_period = 10)
+ok: [STANDBY2] => (item=health_check_period = 10)
+ok: [PRIMARY] => (item=health_check_period = 10)
+ok: [STANDBY1] => (item=health_check_user = 'repuser')
+ok: [STANDBY2] => (item=health_check_user = 'repuser')
+ok: [PRIMARY] => (item=health_check_user = 'repuser')
+ok: [STANDBY1] => (item=pool_passwd = '/etc/pgpool2/pool_passwd')
+ok: [STANDBY2] => (item=pool_passwd = '/etc/pgpool2/pool_passwd')
+ok: [PRIMARY] => (item=pool_passwd = '/etc/pgpool2/pool_passwd')
+ok: [STANDBY2] => (item=sr_check_password = '')
+ok: [STANDBY1] => (item=sr_check_password = '')
+ok: [PRIMARY] => (item=sr_check_password = '')
+ok: [STANDBY1] => (item=health_check_password = '')
+ok: [STANDBY2] => (item=health_check_password = '')
+ok: [PRIMARY] => (item=health_check_password = '')
+ok: [STANDBY2] => (item=backend_hostname0 = '172.31.45.126')
+ok: [STANDBY1] => (item=backend_hostname0 = '172.31.45.126')
+ok: [PRIMARY] => (item=backend_hostname0 = '172.31.45.126')
+ok: [STANDBY2] => (item=backend_hostname1 = '172.31.44.12')
+ok: [STANDBY1] => (item=backend_hostname1 = '172.31.44.12')
+ok: [PRIMARY] => (item=backend_hostname1 = '172.31.44.12')
+ok: [STANDBY2] => (item=backend_port0 = 5432)
+ok: [STANDBY1] => (item=backend_port0 = 5432)
+ok: [PRIMARY] => (item=backend_port0 = 5432)
+ok: [STANDBY2] => (item=backend_port1 = 5432)
+ok: [STANDBY1] => (item=backend_port1 = 5432)
+ok: [PRIMARY] => (item=backend_port1 = 5432)
+ok: [STANDBY2] => (item=backend_weight0 = 0)
+ok: [STANDBY1] => (item=backend_weight0 = 0)
+ok: [PRIMARY] => (item=backend_weight0 = 0)
+ok: [STANDBY2] => (item=backend_weight1 = 0.5)
+ok: [STANDBY1] => (item=backend_weight1 = 0.5)
+ok: [PRIMARY] => (item=backend_weight1 = 0.5)
+ok: [STANDBY2] => (item=backend_data_directory0 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY1] => (item=backend_data_directory0 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [PRIMARY] => (item=backend_data_directory0 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY2] => (item=backend_data_directory1 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY1] => (item=backend_data_directory1 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [PRIMARY] => (item=backend_data_directory1 = '/home/postgres/stormatics/pg_cirrus/data')
+ok: [STANDBY2] => (item=backend_flag0 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY1] => (item=backend_flag0 = 'ALLOW_TO_FAILOVER')
+ok: [PRIMARY] => (item=backend_flag0 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY2] => (item=backend_flag1 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY1] => (item=backend_flag1 = 'ALLOW_TO_FAILOVER')
+ok: [PRIMARY] => (item=backend_flag1 = 'ALLOW_TO_FAILOVER')
+ok: [STANDBY2] => (item=failover_command ='/home/postgres/stormatics/pg_cirrus/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S 17 5432')
+ok: [STANDBY1] => (item=failover_command ='/home/postgres/stormatics/pg_cirrus/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S 17 5432')
+ok: [PRIMARY] => (item=failover_command ='/home/postgres/stormatics/pg_cirrus/failover.sh %d %h %p %D %m %H %M %P %r %R %N %S 17 5432')
+ok: [STANDBY2] => (item=follow_primary_command = '/home/postgres/stormatics/pg_cirrus/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S 5432 172.31.35.243')
+ok: [STANDBY1] => (item=follow_primary_command = '/home/postgres/stormatics/pg_cirrus/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S 5432 172.31.35.243')
+ok: [PRIMARY] => (item=follow_primary_command = '/home/postgres/stormatics/pg_cirrus/follow_primary.sh %d %h %p %D %m %H %M %P %r %R %N %S 5432 172.31.35.243')
+ok: [STANDBY2] => (item=load_balance_mode = on)
+ok: [STANDBY1] => (item=load_balance_mode = on)
+ok: [PRIMARY] => (item=load_balance_mode = on)
+ok: [STANDBY2] => (item=database_redirect_preference_list = '.*:standby')
+ok: [STANDBY1] => (item=database_redirect_preference_list = '.*:standby')
+ok: [PRIMARY] => (item=database_redirect_preference_list = '.*:standby')
+ok: [STANDBY2] => (item=statement_level_load_balance = on)
+ok: [STANDBY1] => (item=statement_level_load_balance = on)
+ok: [PRIMARY] => (item=statement_level_load_balance = on)
+ok: [STANDBY2] => (item=pcp_listen_addresses = '*')
+ok: [STANDBY1] => (item=pcp_listen_addresses = '*')
+ok: [PRIMARY] => (item=pcp_listen_addresses = '*')
+ok: [STANDBY2] => (item=pcp_port = 9898)
+ok: [STANDBY1] => (item=pcp_port = 9898)
+ok: [PRIMARY] => (item=pcp_port = 9898)
+ok: [STANDBY2] => (item=log_destination = 'stderr,syslog')
+ok: [STANDBY1] => (item=log_destination = 'stderr,syslog')
+ok: [PRIMARY] => (item=log_destination = 'stderr,syslog')
+ok: [STANDBY2] => (item=logging_collector = on)
+ok: [STANDBY1] => (item=logging_collector = on)
+ok: [PRIMARY] => (item=logging_collector = on)
+ok: [STANDBY2] => (item=log_directory = '/var/log/pgpool_logs')
+ok: [STANDBY1] => (item=log_directory = '/var/log/pgpool_logs')
+ok: [PRIMARY] => (item=log_directory = '/var/log/pgpool_logs')
+ok: [STANDBY2] => (item=log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log')
+ok: [STANDBY1] => (item=log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log')
+ok: [PRIMARY] => (item=log_filename = 'pgpool-%Y-%m-%d_%H%M%S.log')
+ok: [STANDBY2] => (item=log_file_mode = 0600)
+ok: [STANDBY1] => (item=log_file_mode = 0600)
+ok: [PRIMARY] => (item=log_file_mode = 0600)
+ok: [STANDBY2] => (item=use_watchdog = on)
+ok: [STANDBY1] => (item=use_watchdog = on)
+ok: [PRIMARY] => (item=use_watchdog = on)
+ok: [STANDBY2] => (item=hostname0 = '172.31.45.126')
+ok: [STANDBY1] => (item=hostname0 = '172.31.45.126')
+ok: [PRIMARY] => (item=hostname0 = '172.31.45.126')
+ok: [STANDBY2] => (item=wd_port0 = 9000)
+ok: [STANDBY1] => (item=wd_port0 = 9000)
+ok: [PRIMARY] => (item=wd_port0 = 9000)
+ok: [STANDBY2] => (item=pgpool_port0 = 9999)
+ok: [STANDBY1] => (item=pgpool_port0 = 9999)
+ok: [PRIMARY] => (item=pgpool_port0 = 9999)
+ok: [STANDBY2] => (item=hostname1 = '172.31.44.12')
+ok: [STANDBY1] => (item=hostname1 = '172.31.44.12')
+ok: [PRIMARY] => (item=hostname1 = '172.31.44.12')
+ok: [STANDBY2] => (item=wd_port1 = 9000)
+ok: [STANDBY1] => (item=wd_port1 = 9000)
+ok: [PRIMARY] => (item=wd_port1 = 9000)
+ok: [STANDBY2] => (item=pgpool_port1 = 9999)
+ok: [STANDBY1] => (item=pgpool_port1 = 9999)
+ok: [PRIMARY] => (item=pgpool_port1 = 9999)
+ok: [STANDBY2] => (item=hostname2 = '172.31.40.191')
+ok: [STANDBY1] => (item=hostname2 = '172.31.40.191')
+ok: [STANDBY2] => (item=wd_port2 = 9000)
+ok: [PRIMARY] => (item=hostname2 = '172.31.40.191')
+ok: [STANDBY1] => (item=wd_port2 = 9000)
+ok: [STANDBY2] => (item=pgpool_port2 = 9999)
+ok: [PRIMARY] => (item=wd_port2 = 9000)
+ok: [STANDBY1] => (item=pgpool_port2 = 9999)
+ok: [STANDBY2] => (item=wd_priority = 1)
+ok: [PRIMARY] => (item=pgpool_port2 = 9999)
+ok: [STANDBY1] => (item=wd_priority = 1)
+ok: [STANDBY2] => (item=wd_authkey = 'secretkey')
+ok: [PRIMARY] => (item=wd_priority = 1)
+ok: [STANDBY1] => (item=wd_authkey = 'secretkey')
+changed: [STANDBY2] => (item=wd_monitoring_interfaces_list = 'ens5')
+ok: [PRIMARY] => (item=wd_authkey = 'secretkey')
+changed: [STANDBY1] => (item=wd_monitoring_interfaces_list = 'ens5')
+ok: [STANDBY2] => (item=heartbeat_hostname0 = '172.31.44.12')
+changed: [PRIMARY] => (item=wd_monitoring_interfaces_list = 'ens5')
+ok: [STANDBY1] => (item=heartbeat_hostname0 = '172.31.44.12')
+ok: [STANDBY2] => (item=heartbeat_port0 = 9694)
+ok: [PRIMARY] => (item=heartbeat_hostname0 = '172.31.44.12')
+ok: [STANDBY1] => (item=heartbeat_port0 = 9694)
+changed: [STANDBY2] => (item=heartbeat_device0 = 'ens5')
+ok: [PRIMARY] => (item=heartbeat_port0 = 9694)
+changed: [STANDBY1] => (item=heartbeat_device0 = 'ens5')
+ok: [STANDBY2] => (item=heartbeat_hostname1 = '172.31.40.191')
+ok: [STANDBY1] => (item=heartbeat_hostname1 = '172.31.40.191')
+changed: [PRIMARY] => (item=heartbeat_device0 = 'ens5')
+ok: [STANDBY2] => (item=heartbeat_port1 = 9694)
+ok: [STANDBY1] => (item=heartbeat_port1 = 9694)
+ok: [PRIMARY] => (item=heartbeat_hostname1 = '172.31.40.191')
+changed: [STANDBY2] => (item=heartbeat_device1 = 'ens5')
+changed: [STANDBY1] => (item=heartbeat_device1 = 'ens5')
+ok: [PRIMARY] => (item=heartbeat_port1 = 9694)
+ok: [STANDBY2] => (item=heartbeat_hostname2 = '172.31.45.126')
+ok: [STANDBY1] => (item=heartbeat_hostname2 = '172.31.45.126')
+changed: [PRIMARY] => (item=heartbeat_device1 = 'ens5')
+ok: [STANDBY2] => (item=heartbeat_port2 = 9694)
+ok: [STANDBY1] => (item=heartbeat_port2 = 9694)
+ok: [PRIMARY] => (item=heartbeat_hostname2 = '172.31.45.126')
+changed: [STANDBY2] => (item=heartbeat_device2 = 'ens5')
+changed: [STANDBY1] => (item=heartbeat_device2 = 'ens5')
+ok: [PRIMARY] => (item=heartbeat_port2 = 9694)
+ok: [STANDBY2] => (item=wd_heartbeat_keepalive = 2)
+ok: [STANDBY1] => (item=wd_heartbeat_keepalive = 2)
+changed: [PRIMARY] => (item=heartbeat_device2 = 'ens5')
+ok: [STANDBY2] => (item=wd_heartbeat_deadtime = 10)
+ok: [STANDBY1] => (item=wd_heartbeat_deadtime = 10)
+ok: [PRIMARY] => (item=wd_heartbeat_keepalive = 2)
+ok: [PRIMARY] => (item=wd_heartbeat_deadtime = 10)
+
+TASK [Search for existing standby2 in pgpool.conf] *****************************
+changed: [PRIMARY]
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Add configurations for standby2 to pgpool.conf if not already present] ***
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Change permissions, owner, and group of the pcp.conf file] ***************
+ok: [PRIMARY]
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+TASK [Add user and password to pcp.conf] ***************************************
+changed: [PRIMARY]
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Create a pool_passwd file] ***********************************************
+changed: [PRIMARY]
+changed: [STANDBY1]
+changed: [STANDBY2]
+
+TASK [Ensure PostgreSQL socket directory exists] *******************************
+skipping: [PRIMARY]
+skipping: [STANDBY1]
+skipping: [STANDBY2]
+
+TASK [Stopping the already running pgpool2 service] ****************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+ok: [PRIMARY]
+
+TASK [Copy entire folder] ******************************************************
+ok: [STANDBY2]
+ok: [STANDBY1]
+ok: [PRIMARY]
+
+TASK [Start pgpool2 service] ***************************************************
+changed: [PRIMARY]
+changed: [STANDBY2]
+changed: [STANDBY1]
+
+TASK [Create pgpool_node_id file based on role] ********************************
+ok: [PRIMARY]
+ok: [STANDBY1]
+ok: [STANDBY2]
+
+PLAY RECAP *********************************************************************
+PRIMARY                    : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+STANDBY1                   : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+STANDBY2                   : ok=14   changed=5    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+
