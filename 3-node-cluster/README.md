@@ -30,10 +30,10 @@ Finally test your SSH connection by connecting to each node from pg_cirrus node
 - Copy ~/.ssh/id_rsa.pub file content from standby1 and paste it into ~/.ssh/authorized_keys file on primary, standby2, and standby1 itself
 - Copy ~/.ssh/id_rsa.pub file content from standby2 and paste it into ~/.ssh/authorized_keys file on primary, standby1, and standby2 itself
 
+Now, test your SSH connection by attempting to connect to each node from the other nodes
 # Copy the public key of the Postgres user to authorized_keys inside the Postgres user on pg_cirrus node
 
 - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
-
 
 # Clone pg_cirrus on pg_cirrus node
 
