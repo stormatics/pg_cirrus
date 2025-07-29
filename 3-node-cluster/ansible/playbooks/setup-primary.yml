@@ -185,3 +185,16 @@
         dest: "~/.pcppass"
         mode: 0600
         content: "localhost:9898:postgres:{{ PSQL_SERVER_PASSWORD }}"
+
+    # Create a .pgpass file to store psql and repuser password in PSQL_SERVER_PASSWORD and REPUSER_PASSWORD variables inside vault.yml.
+    - name: Creating .pgpass file
+      become_user: postgres
+      copy:
+        dest: "~/.pgpass"
+        mode: 0600
+        content: |
+          localhost:{{ PG_PORT }}:postgres:postgres:{{ PSQL_SERVER_PASSWORD }}
+          {{ hostvars['PRIMARY']['ansible_host'] }}:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}
+          {% for STANDBYS in groups['STANDBY'] %}
+          {{ hostvars[STANDBYS]['ansible_host'] }}:{{ PG_PORT }}:*:repuser:{{ REPUSER_PASSWORD }}
+          {% endfor %}
