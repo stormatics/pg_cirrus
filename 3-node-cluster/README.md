@@ -20,14 +20,15 @@ Finally test your SSH connection by connecting to each node from pg_cirrus node
 - We need to open the PostgreSQL port (default is 5432 or the port on which the server is being installed) on primary to allow standby1 and standby2 to establish replication.
 - We also need to open access from pg_cirrus node to all primary, standby1 and standby2 nodes on PostgreSQL port
 - Make sure Port 9999 is open on pg_cirrus node to allow any traffic from internet. Because this is the port where Application will be connected
-- Port 9000 should be open for Watchdog communication, which monitors the status of PostgreSQL nodes in the cluster.- Also - - Open port 22 on all PostgreSQL nodes to allow SSH communication between them.
+- Port 9000 should be open for Watchdog communication, which monitors the status of PostgreSQL nodes in the cluster.
+- Also open port 22 on all PostgreSQL nodes to allow SSH communication between them.
 - Port 9694 must be open on all nodes for Watchdog health check communication between Pgpool-II instances.
 
 # Setup passwordless SSH access between primary to standby
 
-Copy ~/.ssh/id_rsa.pub file content from primary and paste it into ~/.ssh/authorized_keys file on standby1, standby2, and primary itself
-Copy ~/.ssh/id_rsa.pub file content from standby1 and paste it into ~/.ssh/authorized_keys file on primary, standby2, and standby1 itself
-Copy ~/.ssh/id_rsa.pub file content from standby2 and paste it into ~/.ssh/authorized_keys file on primary, standby1, and standby2 itself
+- Copy ~/.ssh/id_rsa.pub file content from primary and paste it into ~/.ssh/authorized_keys file on standby1, standby2, and primary itself
+- Copy ~/.ssh/id_rsa.pub file content from standby1 and paste it into ~/.ssh/authorized_keys file on primary, standby2, and standby1 itself
+- Copy ~/.ssh/id_rsa.pub file content from standby2 and paste it into ~/.ssh/authorized_keys file on primary, standby1, and standby2 itself
 
 # Copy the public key of the Postgres user to authorized_keys inside the Postgres user on pg_cirrus node
 
