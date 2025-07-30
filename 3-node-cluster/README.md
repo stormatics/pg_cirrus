@@ -24,7 +24,7 @@ Finally test your SSH connection by connecting to each node from pg_cirrus node
 - Also open port 22 on all PostgreSQL nodes to allow SSH communication between them.
 - Port 9694 must be open on all nodes for Watchdog health check communication between Pgpool-II instances.
 
-# Setup passwordless SSH access between primary to standby
+# Setup passwordless SSH access between primary and standby
 
 - Copy ~/.ssh/id_rsa.pub file content from primary and paste it into ~/.ssh/authorized_keys file on standby1, standby2, and primary itself
 - Copy ~/.ssh/id_rsa.pub file content from standby1 and paste it into ~/.ssh/authorized_keys file on primary, standby2, and standby1 itself
