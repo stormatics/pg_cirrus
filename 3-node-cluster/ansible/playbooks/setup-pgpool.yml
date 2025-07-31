@@ -99,18 +99,22 @@
         - "pgpool_port2 = 9999"
         - "wd_priority = 1"
         - "wd_authkey = 'secretkey'"
-        - "wd_monitoring_interfaces_list = 'ens5'"
+        - "wd_monitoring_interfaces_list = 'eth0'"
         - "heartbeat_hostname0 = '{{ hostvars['STANDBY1']['ansible_host'] }}'"
         - "heartbeat_port0 = 9694"
-        - "heartbeat_device0 = 'ens5'"
+        - "heartbeat_device0 = 'eth0'"
         - "heartbeat_hostname1 = '{{ hostvars['STANDBY2']['ansible_host'] }}'"
         - "heartbeat_port1 = 9694"
-        - "heartbeat_device1 = 'ens5'"
+        - "heartbeat_device1 = 'eth0'"
         - "heartbeat_hostname2 = '{{ hostvars['PRIMARY']['ansible_host'] }}'"
         - "heartbeat_port2 = 9694"
-        - "heartbeat_device2 = 'ens5'"
+        - "heartbeat_device2 = 'eth0'"
         - "wd_heartbeat_keepalive = 2"
         - "wd_heartbeat_deadtime = 10"
+        - "delegate_IP = '192.168.100.250'"
+        - "enable_consensus_with_half_votes = off"
+
+
 
 
     # Check if backend_hostname2 exists in pgpool.conf.
