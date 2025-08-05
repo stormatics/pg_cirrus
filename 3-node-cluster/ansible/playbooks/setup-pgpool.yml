@@ -111,7 +111,7 @@
         - "heartbeat_device2 = 'eth0'"
         - "wd_heartbeat_keepalive = 2"
         - "wd_heartbeat_deadtime = 10"
-        - "delegate_IP = '192.168.100.250'"
+        - "delegate_IP = '172.22.0.14'"
         - "enable_consensus_with_half_votes = off"
 
 
@@ -174,21 +174,7 @@
       service:
         name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
         state: stopped
-
-    - name: Copy entire folder
-      copy:
-        src: /home/postgres/pg_cirrus/3-node-cluster/pgpool-internals/
-        dest: /home/postgres/stormatics/pg_cirrus/
-        owner: postgres
-        group: postgres
-        mode: '0755'
-
-    # Start pgpool2 srevice on localhost.
-    - name: Start pgpool2 service
-      service:
-        name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
-        state: started
-    
+   
     - name: Create pgpool_node_id file based on role
       copy:
         dest: /etc/pgpool2/pgpool_node_id
@@ -205,5 +191,20 @@
         owner: postgres
         group: postgres
         mode: '0644'
+
+    - name: Copy entire folder
+      copy:
+        src: /home/postgres/pg_cirrus/3-node-cluster/pgpool-internals/
+        dest: /home/postgres/stormatics/pg_cirrus/
+        owner: postgres
+        group: postgres
+        mode: '0755'
+
+    # Start pgpool2 srevice on localhost.
+    - name: Start pgpool2 service
+      service:
+        name: "{{ 'pgpool' if ansible_facts['os_family'] == 'RedHat' else 'pgpool2' }}"
+        state: started
+    
           
 
