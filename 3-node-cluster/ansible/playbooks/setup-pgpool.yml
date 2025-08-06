@@ -111,7 +111,7 @@
         - "heartbeat_device2 = 'eth0'"
         - "wd_heartbeat_keepalive = 2"
         - "wd_heartbeat_deadtime = 10"
-        - "delegate_IP = '172.22.0.14'"
+        - "delegate_IP = '10.10.10.114'"
         - "enable_consensus_with_half_votes = off"
 
 
