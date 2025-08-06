@@ -122,7 +122,7 @@ def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
             file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
 # Function to generate variable file at runtime.
-def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP):
+def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP, DELEGATE_IP):
     print("Generating conf.yml ...")
     with open('conf.yml', 'w') as file:
         file.write('PG_PORT: ' + PG_PORT + '\n')
@@ -130,6 +130,7 @@ def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_
         file.write('PGPOOL_IP: ' + PGPOOL_IP + '\n')
         file.write('INITDB_PATH: ' + INITDB_PATH + '\n')
         file.write('CLUSTER_SUBNET: '+ CLUSTER_SUBNET +'\n')
+        file.write('DELEGATE_IP: ' + DELEGATE_IP + '\n')
         file.write('STANDBY_SERVERS:\n')
         for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
             file.write('  - NAME: STANDBY' + str(i) + '\n')
@@ -340,6 +341,9 @@ def main():
         pgpool_ip = GET_VALID_IP("IP address of this node to setup pgpool: ", cluster_subnet,
                                  [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}])
         print()
+        delegate_ip = GET_VALID_IP("Enter Delegate IP for Pgpool VIP: ", cluster_subnet,
+                           [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}, {'IP': pgpool_ip}])
+        print()
 
         standby_ips = [standby1_ip, standby2_ip]  # ✅ Assign list here
 
@@ -348,7 +352,8 @@ def main():
             "cluster_subnet": cluster_subnet,
             "primary_ip": primary_ip,
             "standby_ips": standby_ips,
-            "pgpool_ip": pgpool_ip
+            "pgpool_ip": pgpool_ip,
+            "delegate_ip": delegate_ip
         }
         save_config(config)
         print("\n✅ Configuration saved to", CONFIG_FILE, "\n")
@@ -360,6 +365,8 @@ def main():
         primary_ip = config["primary_ip"]
         standby_ips = config["standby_ips"]  # ✅ Still defined properly
         pgpool_ip = config["pgpool_ip"]
+        delegate_ip = config["delegate_ip"]
+
 
     # Gather remaining required values
     PG_VERSION = GET_POSTGRESQL_VERSION()
@@ -374,7 +381,7 @@ def main():
 
     # ✅ Generate necessary files
     GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH,
-                      cluster_subnet, STANDBY_SERVERS, pgpool_ip)
+                      cluster_subnet, STANDBY_SERVERS, pgpool_ip, delegate_ip)
     GENERATE_INVENTORY_FILE(primary_ip, STANDBY_SERVERS)
 
     # ✅ Run the playbooks
