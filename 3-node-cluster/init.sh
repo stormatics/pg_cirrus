@@ -11,6 +11,13 @@ install_packages() {
 	sudo yum update -y
 	sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
         sudo yum install -y openssh-server net-tools python3 acl ansible git vim
+
+	# Download and install libmemcached-awesome
+        echo "Downloading libmemcached-awesome RPM..."
+        curl -OL https://repo.almalinux.org/almalinux/9/CRB/x86_64/os/Packages/libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
+        echo "Installing libmemcached-awesome..."
+        sudo rpm -ivh libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
+
     elif [ -f /etc/debian_version ]; then
         # Debian-based systems (Ubuntu, Debian, etc.)
         echo "Detected Debian-based system. Installing packages..."
