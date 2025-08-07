@@ -177,7 +177,7 @@
    
     - name: Create pgpool_node_id file based on role
       copy:
-        dest: /etc/pgpool2/pgpool_node_id
+        dest: "{{ (ansible_facts['os_family'] == 'RedHat') | ternary('/etc/pgpool-II/pgpool_node_id', '/etc/pgpool2/pgpool_node_id') }}"
         content: |
           {% if inventory_hostname == 'PRIMARY' %}
           0

@@ -1,11 +1,11 @@
 {
     "vault_password_file": "vault",
     "cluster_subnet": "0.0.0.0/0",
-    "primary_ip": "10.10.10.111",
+    "primary_ip": "10.10.10.101",
     "standby_ips": [
-        "10.10.10.112",
-        "10.10.10.113"
+        "10.10.10.102",
+        "10.10.10.103"
     ],
-    "pgpool_ip": "10.10.10.110",
-    "delegate_ip": "10.10.10.114"
+    "pgpool_ip": "10.10.10.100",
+    "delegate_ip": "10.10.10.104"
 }
