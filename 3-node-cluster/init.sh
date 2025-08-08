@@ -2,22 +2,6 @@
 
 # init.sh
 # This file is used to install pre requirements. Run this file on all the nodes in the cluster
-# ==============================
-# Auto-kill yum makecache process
-# ==============================
-echo "Starting yum makecache monitor..."
-
-while true; do
-    pid=$(ps -ef | grep "[y]um makecache" | awk '{print $2}')
-    if [[ -n "$pid" ]]; then
-        runtime=$(ps -p "$pid" -o etimes= | tr -d ' ')
-        if (( runtime > 60 )); then
-            echo "[$(date)] Killing yum makecache (PID: $pid, runtime: ${runtime}s)"
-            kill -9 "$pid"
-        fi
-    fi
-    sleep 5
-done &
 
 # Function to detect package manager and install required packages
 install_packages() {
