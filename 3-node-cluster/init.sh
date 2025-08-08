@@ -11,7 +11,9 @@ install_packages() {
 	sudo yum update -y
 	sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
         sudo yum install -y openssh-server net-tools python3 acl ansible git vim
-
+    
+	    sudo systemctl enable sshd
+        sudo systemctl start sshd
 	# Download and install libmemcached-awesome
         echo "Downloading libmemcached-awesome RPM..."
         curl -OL https://repo.almalinux.org/almalinux/9/CRB/x86_64/os/Packages/libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
@@ -27,7 +29,8 @@ install_packages() {
 
         # Ensure SSH service can run
         sudo mkdir -p /var/run/sshd
-        sudo /usr/sbin/sshd
+		sudo systemctl enable ssh
+        sudo systemctl start ssh
     else
         echo "Unsupported OS. Exiting."
         exit 1
