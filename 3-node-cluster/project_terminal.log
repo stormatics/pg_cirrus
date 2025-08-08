@@ -64,3 +64,192 @@ Traceback (most recent call last):
   File "/usr/lib64/python3.9/subprocess.py", line 528, in run
     raise CalledProcessError(retcode, process.args,
 subprocess.CalledProcessError: Command '['ansible-playbook', '--become', 'ansible/playbooks/setup-pgdg-repo.yml']' returned non-zero exit status 2.
+Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup
+
+
+🔁 Loaded configuration from saved_config.json
+{
+    "vault_password_file": "vault",
+    "cluster_subnet": "0.0.0.0/0",
+    "primary_ip": "10.10.10.171",
+    "standby_ips": [
+        "10.10.10.172",
+        "10.10.10.173"
+    ],
+    "pgpool_ip": "10.10.10.170",
+    "delegate_ip": "10.10.10.174"
+} 
+
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [Install PostgreSQL] ******************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for localhost
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+skipping: [localhost]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+skipping: [localhost]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+skipping: [localhost]
+
+TASK [Download the PGDG RPM package] *******************************************
+changed: [localhost]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+changed: [localhost]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+changed: [localhost]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+fatal: [localhost]: FAILED! => {"changed": true, "cmd": ["yum", "makecache"], "delta": "0:00:17.311343", "end": "2025-08-08 12:10:54.131190", "msg": "non-zero return code", "rc": 1, "start": "2025-08-08 12:10:36.819847", "stderr": "Importing GPG key 0x08B40D20:\n Userid     : \"PostgreSQL RPM Repository <pgsql-pkg-yum@lists.postgresql.org>\"\n Fingerprint: D4BF 08AE 67A0 B4C7 A1DB CCD2 40BC A2B4 08B4 0D20\n From       : /etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL\nError: Failed to download metadata for repo 'pgdg-common': repomd.xml GPG signature verification error: Bad GPG signature", "stderr_lines": ["Importing GPG key 0x08B40D20:", " Userid     : \"PostgreSQL RPM Repository <pgsql-pkg-yum@lists.postgresql.org>\"", " Fingerprint: D4BF 08AE 67A0 B4C7 A1DB CCD2 40BC A2B4 08B4 0D20", " From       : /etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL", "Error: Failed to download metadata for repo 'pgdg-common': repomd.xml GPG signature verification error: Bad GPG signature"], "stdout": "AlmaLinux 9 - AppStream                          57 MB/s |  15 MB     00:00    \nAlmaLinux 9 - BaseOS                             55 MB/s |  18 MB     00:00    \nAlmaLinux 9 - Extras                            245 kB/s |  20 kB     00:00    \nExtra Packages for Enterprise Linux 9 - x86_64   48 MB/s |  20 MB     00:00    \nExtra Packages for Enterprise Linux 9 openh264  6.7 kB/s | 2.5 kB     00:00    \nPostgreSQL common RPMs for RHEL / Rocky / AlmaL 7.0 kB/s | 659  B     00:00    \nPostgreSQL common RPMs for RHEL / Rocky / AlmaL 2.4 MB/s | 2.4 kB     00:00    \nIs this ok [y/N]: PostgreSQL common RPMs for RHEL / Rocky / AlmaL  12 kB/s | 659  B     00:00    ", "stdout_lines": ["AlmaLinux 9 - AppStream                          57 MB/s |  15 MB     00:00    ", "AlmaLinux 9 - BaseOS                             55 MB/s |  18 MB     00:00    ", "AlmaLinux 9 - Extras                            245 kB/s |  20 kB     00:00    ", "Extra Packages for Enterprise Linux 9 - x86_64   48 MB/s |  20 MB     00:00    ", "Extra Packages for Enterprise Linux 9 openh264  6.7 kB/s | 2.5 kB     00:00    ", "PostgreSQL common RPMs for RHEL / Rocky / AlmaL 7.0 kB/s | 659  B     00:00    ", "PostgreSQL common RPMs for RHEL / Rocky / AlmaL 2.4 MB/s | 2.4 kB     00:00    ", "Is this ok [y/N]: PostgreSQL common RPMs for RHEL / Rocky / AlmaL  12 kB/s | 659  B     00:00    "]}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=5    changed=3    unreachable=0    failed=1    skipped=3    rescued=0    ignored=0   
+
+Error: Failed to execute setup-pgdg-repo.yml playbook.
+Enter PostgreSQL version (Latest: 17): Enter the PostgreSQL port number: (Default: 5432): Enter the Data Directory Path: (Default: /home/postgres/stormatics/pg_cirrus/data): Generating conf.yml ...
+Generating inventory file ...
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [PRIMARY]
+
+TASK [Load common variables] ***************************************************
+ok: [PRIMARY]
+
+TASK [Load vault variables] ****************************************************
+ok: [PRIMARY]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for PRIMARY
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+skipping: [PRIMARY]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+skipping: [PRIMARY]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+skipping: [PRIMARY]
+
+TASK [Download the PGDG RPM package] *******************************************
+changed: [PRIMARY]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+changed: [PRIMARY]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+changed: [PRIMARY]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+fatal: [PRIMARY]: FAILED! => {"changed": true, "cmd": ["yum", "makecache"], "delta": "0:00:25.026219", "end": "2025-08-08 12:12:03.188427", "msg": "non-zero return code", "rc": -9, "start": "2025-08-08 12:11:38.162208", "stderr": "Importing GPG key 0x08B40D20:\n Userid     : \"PostgreSQL RPM Repository <pgsql-pkg-yum@lists.postgresql.org>\"\n Fingerprint: D4BF 08AE 67A0 B4C7 A1DB CCD2 40BC A2B4 08B4 0D20\n From       : /etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL", "stderr_lines": ["Importing GPG key 0x08B40D20:", " Userid     : \"PostgreSQL RPM Repository <pgsql-pkg-yum@lists.postgresql.org>\"", " Fingerprint: D4BF 08AE 67A0 B4C7 A1DB CCD2 40BC A2B4 08B4 0D20", " From       : /etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL"], "stdout": "AlmaLinux 9 - AppStream                          57 MB/s |  15 MB     00:00    \nAlmaLinux 9 - BaseOS                             60 MB/s |  18 MB     00:00    \nAlmaLinux 9 - Extras                            257 kB/s |  20 kB     00:00    \nExtra Packages for Enterprise Linux 9 - x86_64   48 MB/s |  20 MB     00:00    \nExtra Packages for Enterprise Linux 9 openh264  7.2 kB/s | 2.5 kB     00:00    \nPostgreSQL common RPMs for RHEL / Rocky / AlmaL 6.7 kB/s | 659  B     00:00    \nPostgreSQL common RPMs for RHEL / Rocky / AlmaL 2.4 MB/s | 2.4 kB     00:00    \nIs this ok [y/N]: ", "stdout_lines": ["AlmaLinux 9 - AppStream                          57 MB/s |  15 MB     00:00    ", "AlmaLinux 9 - BaseOS                             60 MB/s |  18 MB     00:00    ", "AlmaLinux 9 - Extras                            257 kB/s |  20 kB     00:00    ", "Extra Packages for Enterprise Linux 9 - x86_64   48 MB/s |  20 MB     00:00    ", "Extra Packages for Enterprise Linux 9 openh264  7.2 kB/s | 2.5 kB     00:00    ", "PostgreSQL common RPMs for RHEL / Rocky / AlmaL 6.7 kB/s | 659  B     00:00    ", "PostgreSQL common RPMs for RHEL / Rocky / AlmaL 2.4 MB/s | 2.4 kB     00:00    ", "Is this ok [y/N]: "]}
+
+PLAY RECAP *********************************************************************
+PRIMARY                    : ok=7    changed=3    unreachable=0    failed=1    skipped=3    rescued=0    ignored=0   
+
+Error: Failed to execute setup-primary.yml playbook.
+Exiting pg_cirrus.
+Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup
+
+
+🔁 Loaded configuration from saved_config.json
+{
+    "vault_password_file": "vault",
+    "cluster_subnet": "0.0.0.0/0",
+    "primary_ip": "10.10.10.171",
+    "standby_ips": [
+        "10.10.10.172",
+        "10.10.10.173"
+    ],
+    "pgpool_ip": "10.10.10.170",
+    "delegate_ip": "10.10.10.174"
+} 
+
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [Install PostgreSQL] ******************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for localhost
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+skipping: [localhost]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+skipping: [localhost]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+skipping: [localhost]
+
+TASK [Download the PGDG RPM package] *******************************************
+ok: [localhost]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+ok: [localhost]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+changed: [localhost]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+changed: [localhost]
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=6    changed=2    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
+
+Enter PostgreSQL version (Latest: 17): Enter the PostgreSQL port number: (Default: 5432): Enter the Data Directory Path: (Default: /home/postgres/stormatics/pg_cirrus/data): Generating conf.yml ...
+Generating inventory file ...
+
+PLAY [Configure PostgreSQL primary server] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [PRIMARY]
+
+TASK [Load common variables] ***************************************************
+ok: [PRIMARY]
+
+TASK [Load vault variables] ****************************************************
+ok: [PRIMARY]
+
+TASK [Setup pgdg repo] *********************************************************
+included: /home/postgres/pg_cirrus/3-node-cluster/ansible/tasks/setup-pgdg-repo.yml for PRIMARY
+
+TASK [Add pgdg repo to sources (Debian/Ubuntu)] ********************************
+skipping: [PRIMARY]
+
+TASK [Download PostgreSQL key (Debian/Ubuntu)] *********************************
+skipping: [PRIMARY]
+
+TASK [Update apt cache (Debian/Ubuntu)] ****************************************
+skipping: [PRIMARY]
+
+TASK [Download the PGDG RPM package] *******************************************
+ok: [PRIMARY]
+
+TASK [Add pgdg repo to YUM (Red Hat/CentOS/Fedora)] ****************************
+ok: [PRIMARY]
+
+TASK [Clean YUM cache (Red Hat/CentOS/Fedora)] *********************************
+changed: [PRIMARY]
+
+TASK [Update YUM cache (Red Hat/CentOS/Fedora)] ********************************
+fatal: [PRIMARY]: FAILED! => {"changed": true, "cmd": ["yum", "makecache"], "delta": "0:00:21.801417", "end": "2025-08-08 12:14:28.462024", "msg": "non-zero return code", "rc": -9, "start": "2025-08-08 12:14:06.660607", "stderr": "", "stderr_lines": [], "stdout": "AlmaLinux 9 - AppStream                          55 MB/s |  15 MB     00:00    \nAlmaLinux 9 - BaseOS                             60 MB/s |  18 MB     00:00    \nAlmaLinux 9 - Extras                            254 kB/s |  20 kB     00:00    \nExtra Packages for Enterprise Linux 9 - x86_64   32 MB/s |  20 MB     00:00    \nExtra Packages for Enterprise Linux 9 openh264  7.2 kB/s | 2.5 kB     00:00    \nPostgreSQL common RPMs for RHEL / Rocky / AlmaL 3.7 MB/s | 578 kB     00:00    \nPostgreSQL 17 for RHEL / Rocky / AlmaLinux 9 -  3.9 MB/s | 526 kB     00:00    \nPostgreSQL 16 for RHEL / Rocky / AlmaLinux 9 -  5.3 MB/s | 744 kB     00:00    \nPostgreSQL 15 for RHEL / Rocky / AlmaLinux 9 -  7.1 MB/s | 951 kB     00:00    \nPostgreSQL 14 for RHEL / Rocky / AlmaLinux 9 -  9.2 MB/s | 1.2 MB     00:00    \nPostgreSQL 13 for RHEL / Rocky / AlmaLinux 9 -  9.0 MB/s | 1.1 MB     00:00    ", "stdout_lines": ["AlmaLinux 9 - AppStream                          55 MB/s |  15 MB     00:00    ", "AlmaLinux 9 - BaseOS                             60 MB/s |  18 MB     00:00    ", "AlmaLinux 9 - Extras                            254 kB/s |  20 kB     00:00    ", "Extra Packages for Enterprise Linux 9 - x86_64   32 MB/s |  20 MB     00:00    ", "Extra Packages for Enterprise Linux 9 openh264  7.2 kB/s | 2.5 kB     00:00    ", "PostgreSQL common RPMs for RHEL / Rocky / AlmaL 3.7 MB/s | 578 kB     00:00    ", "PostgreSQL 17 for RHEL / Rocky / AlmaLinux 9 -  3.9 MB/s | 526 kB     00:00    ", "PostgreSQL 16 for RHEL / Rocky / AlmaLinux 9 -  5.3 MB/s | 744 kB     00:00    ", "PostgreSQL 15 for RHEL / Rocky / AlmaLinux 9 -  7.1 MB/s | 951 kB     00:00    ", "PostgreSQL 14 for RHEL / Rocky / AlmaLinux 9 -  9.2 MB/s | 1.2 MB     00:00    ", "PostgreSQL 13 for RHEL / Rocky / AlmaLinux 9 -  9.0 MB/s | 1.1 MB     00:00    "]}
+
+PLAY RECAP *********************************************************************
+PRIMARY                    : ok=7    changed=1    unreachable=0    failed=1    skipped=3    rescued=0    ignored=0   
+
+Error: Failed to execute setup-primary.yml playbook.
+Exiting pg_cirrus.

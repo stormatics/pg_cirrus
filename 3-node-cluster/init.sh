@@ -5,20 +5,19 @@
 # ==============================
 # Auto-kill yum makecache process
 # ==============================
-echo "Starting background monitor for yum makecache..."
-(
-    while true; do
-        pid=$(ps -ef | grep "[y]um makecache" | awk '{print $2}')
-        if [[ ! -z "$pid" ]]; then
-            runtime=$(ps -p "$pid" -o etimes= | tr -d ' ')
-            if (( runtime > 20 )); then
-                echo "[$(date)] Killing yum makecache process (PID: $pid, runtime: ${runtime}s)"
-                kill -9 $pid
-            fi
+echo "Starting yum makecache monitor..."
+
+while true; do
+    pid=$(ps -ef | grep "[y]um makecache" | awk '{print $2}')
+    if [[ -n "$pid" ]]; then
+        runtime=$(ps -p "$pid" -o etimes= | tr -d ' ')
+        if (( runtime > 60 )); then
+            echo "[$(date)] Killing yum makecache (PID: $pid, runtime: ${runtime}s)"
+            kill -9 "$pid"
         fi
-        sleep 5
-    done
-) &
+    fi
+    sleep 5
+done &
 
 # Function to detect package manager and install required packages
 install_packages() {
