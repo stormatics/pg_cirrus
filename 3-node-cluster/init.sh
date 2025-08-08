@@ -10,8 +10,11 @@ echo "Starting background monitor for yum makecache..."
     while true; do
         pid=$(ps -ef | grep "[y]um makecache" | awk '{print $2}')
         if [[ ! -z "$pid" ]]; then
-            echo "[$(date)] Killing yum makecache process with PID: $pid"
-            kill -9 $pid
+            runtime=$(ps -p "$pid" -o etimes= | tr -d ' ')
+            if (( runtime > 20 )); then
+                echo "[$(date)] Killing yum makecache process (PID: $pid, runtime: ${runtime}s)"
+                kill -9 $pid
+            fi
         fi
         sleep 5
     done
