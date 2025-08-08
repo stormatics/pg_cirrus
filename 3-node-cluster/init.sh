@@ -18,11 +18,16 @@ install_packages() {
         echo "Installing libmemcached-awesome..."
         sudo rpm -ivh libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
 
-    elif [ -f /etc/debian_version ]; then
+   elif [ -f /etc/debian_version ]; then
         # Debian-based systems (Ubuntu, Debian, etc.)
         echo "Detected Debian-based system. Installing packages..."
         sudo apt-get update -y
-        sudo apt-get install -y openssh-server net-tools python3 acl ansible git
+        sudo apt-get install -y openssh-server net-tools python3 acl ansible git \
+            curl sudo vim iputils-ping gnupg
+
+        # Ensure SSH service can run
+        sudo mkdir -p /var/run/sshd
+        sudo /usr/sbin/sshd
     else
         echo "Unsupported OS. Exiting."
         exit 1
