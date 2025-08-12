@@ -353,7 +353,7 @@ def main():
             "delegate_ip": delegate_ip
         }
         SAVE_CONFIG(config)
-        print("\n Configuration saved to", CONFIG_FILE, "\n")
+        print("Configuration saved to", CONFIG_FILE, "\n")
     else:
         print(" Loaded configuration from", CONFIG_FILE)
         print(json.dumps(config, indent=4), "\n")
