@@ -98,7 +98,7 @@
         - "wd_port2 = 9000"
         - "pgpool_port2 = 9999"
         - "wd_priority = 1"
-        - "wd_authkey = 'secretkey'"
+        - "wd_authkey = '{{ WATCHDOG_AUTHENTICATION_KEY }}'"
         - "wd_monitoring_interfaces_list = 'eth0'"
         - "heartbeat_hostname0 = '{{ hostvars['STANDBY1']['ansible_host'] }}'"
         - "heartbeat_port0 = 9694"
