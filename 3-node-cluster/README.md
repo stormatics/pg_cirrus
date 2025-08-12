@@ -56,7 +56,7 @@ Add the following lines to the vault.yml file, update the password as required, 
 
 - PSQL_SERVER_PASSWORD: <your_psql_server_password>
 - REPUSER_PASSWORD: <your_replication_user_password>
-- wd_authkey: <watchdog_communication_password>
+- WATCHDOG_AUTHENTICATION_KEY: <watchdog_communication_password>
 
 # Create a file to store the vault password
 
