@@ -1,4 +1,6 @@
 # Configure pg_cirrus, Primary, Standby1 and Standby2 Nodes
+Open the init.sh file and search for POSTGRES_PASSWORD. Replace the password value with your OS postgres user’s password.
+
 
 Download init.sh file from pg_cirrus repository and execute it on all the nodes inside the cluster
 - curl -OL https://raw.githubusercontent.com/mahatariq11/pg_cirrus/refs/heads/dev-improving-codebase/3-node-cluster/init.sh
