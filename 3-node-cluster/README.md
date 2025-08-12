@@ -46,17 +46,16 @@ Clone pg_cirrus
 
 
 # Create a vault.yml file using Ansible vault
-
+The vault.yml file is used to store the database credentials for the cluster.
+Navigate to your chosen secure location and execute the following command to create this file:
 - ansible-vault create vault.yml
 
-You will be prompted for vault password, after entering vault password vault file will be open.
+You will be prompted to enter the vault password.
+After providing the password, the vault file will open.
+Add the following lines to the vault.yml file, update the password as required, and then save the file.
 
-Write the following lines inside vault.yml
-
-PSQL_SERVER_PASSWORD: <your_psql_server_password>
-
-REPUSER_PASSWORD: <your_replication_user_password>
-
+- PSQL_SERVER_PASSWORD: <your_psql_server_password>
+- REPUSER_PASSWORD: <your_replication_user_password>
 
 # Create a file to store the vault password
 
