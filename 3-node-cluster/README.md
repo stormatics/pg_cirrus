@@ -7,7 +7,7 @@ Download init.sh file from pg_cirrus repository and execute it on all the nodes 
 Open the init.sh file and search for:
 - POSTGRES_PASSWORD="<postgres_password>"
 
- Replace the password value with your OS postgres user’s password.
+ Replace the password value with your OS user's postgres password.
 
 # Setup passwordless SSH access from pg_cirrus node to other nodes 
 
