@@ -4,8 +4,8 @@ Download init.sh file from pg_cirrus repository and execute it on all the nodes 
 - chmod +x init.sh
 - ./init.sh
 
-Open the init.sh file and search for :
-- POSTGRES_PASSWORD="*****"
+Open the init.sh file and search for:
+- POSTGRES_PASSWORD="<postgres_password>"
 
  Replace the password value with your OS postgres user’s password.
 
