@@ -245,7 +245,6 @@ def GET_VAULT_PASSWORD_FILE():
                 print(f"File '{VAULT_PASSWORD_FILE}' does not have the correct permissions (0600).")
                 exit()
             else:
-                print("All checks for VAULT_PASSWORD_FILE were passed")
                 return VAULT_PASSWORD_FILE.strip()
 
 # Function to execute all playbooks.
