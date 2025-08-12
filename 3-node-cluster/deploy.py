@@ -24,7 +24,7 @@ class DualLogger:
         self.terminal.flush()
         self.log.flush()
 
-sys.stdout = sys.stderr = DualLogger("pg_cirrus-logs.log")
+sys.stdout = sys.stderr = DualLogger("cluster-logs.log")
 
 CONFIG_FILE = "cluster-config.json"
 def LOAD_CONFIG():
