@@ -4,7 +4,7 @@
 # This file is used to install pre requirements. Run this file on all the nodes in the cluster
 
 # Function to detect package manager and install required packages
-install_packages() {
+INSTALL_PACKAGES() {
     if [ -f /etc/redhat-release ]; then
         # Red Hat-based systems (RHEL, CentOS, etc.)
         echo "Detected Red Hat-based system. Installing packages..."
@@ -48,7 +48,7 @@ install_packages() {
 POSTGRES_PASSWORD="<postgres_password>"
 
 # Update package manager cache and install packages
-install_packages
+INSTALL_PACKAGES
 
 # Ensure postgres user is created with default password
 echo "Ensuring postgres user is created..."
