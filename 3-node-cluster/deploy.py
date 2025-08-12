@@ -318,7 +318,7 @@ def GET_VALID_SUBNET():
 
 # Main function to execute pg_cirrus.
 def main():
-    print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
+    print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n")
 
     standby_ips = []  #  Make sure standby_ips is always defined
     config = LOAD_CONFIG()
