@@ -1,12 +1,29 @@
-# pg_cirrus - Hassle-free PostgreSQL Cluster Setup
-pg_cirrus is a solution for setting up a 3-node highly available PostgreSQL cluster on Linux operating systems. Currently, it only supports Ubuntu, however support for other Linux flavors is on the roadmap.
+# pg_cirrus — Hassle-Free PostgreSQL Cluster Setup
 
-Main technologies used are PostgreSQL, Python and Ansible.
+**pg_cirrus** is a utility designed to simplify the deployment of a **highly available 3-node PostgreSQL cluster** on Linux-based systems.
 
-The objective of this project is to configure a highly available 3-node cluster in easiest possible way.
+## Overview
 
-The name **cirrus** comes from the cirrus cloud, a thin and wispy cloud that forms at high altitudes.
+The primary objective of this project is to enable users to configure a robust, fault-tolerant PostgreSQL cluster with minimal manual intervention.  
+The configuration follows best practices for **high availability (HA)** while keeping the process simple and repeatable.
 
-# License
+The name **cirrus** is inspired by the **cirrus cloud** — thin, wispy clouds that form at high altitudes — reflecting the lightweight yet reliable nature of the tool.
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0). You can find a copy of the license in the [LICENSE](LICENSE) file.
+## Features
+- Automated deployment of a **3-node HA PostgreSQL cluster**.
+- Uses **streaming replication**.
+- Built with **Python** and **Ansible** for flexibility and automation.
+- Designed for minimal configuration overhead.
+
+## Supported Platforms
+
+This tool has been **tested and verified** on:
+- **Ubuntu**
+- **Red Hat Enterprise Linux (RHEL)**
+
+It may also work on other Linux distributions with compatible PostgreSQL and Ansible versions, but they are not officially tested.
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  
+You can find a full copy of the license in the [LICENSE](LICENSE) file.
