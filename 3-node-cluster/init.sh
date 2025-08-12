@@ -14,7 +14,14 @@ install_packages() {
     
 	    sudo systemctl enable sshd
         sudo systemctl start sshd
-	    # Download and install libmemcached-awesome
+
+        # Create directory for RPM files
+        RPM_DIR="/home/postgres/stormatics/pg_cirrus/RPM"
+		echo "Creating directory for RPM packages at $RPM_DIR..."
+        sudo mkdir "$RPM_DIR"
+		sudo chmod 755 "$RPM_DIR"
+		cd "$RPM_DIR" || { echo "Failed to change directory to $RPM_DIR"; exit 1; }
+        # Download and install libmemcached-awesome
         echo "Downloading libmemcached-awesome RPM..."
         curl -OL https://repo.almalinux.org/almalinux/9/CRB/x86_64/os/Packages/libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
         echo "Installing libmemcached-awesome..."
