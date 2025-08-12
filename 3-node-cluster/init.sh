@@ -8,9 +8,9 @@ install_packages() {
     if [ -f /etc/redhat-release ]; then
         # Red Hat-based systems (RHEL, CentOS, etc.)
         echo "Detected Red Hat-based system. Installing packages..."
-	    sudo yum update -y
-	    sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
-        sudo yum install -y openssh-server net-tools python3 acl ansible git vim
+	    sudo dnf update -y
+	    sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
+        sudo dnf install -y openssh-server net-tools python3 acl ansible git vim
     
 	    sudo systemctl enable sshd
         sudo systemctl start sshd
