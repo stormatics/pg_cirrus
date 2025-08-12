@@ -26,7 +26,7 @@ class DualLogger:
 
 sys.stdout = sys.stderr = DualLogger("pg_cirrus-logs.log")
 
-CONFIG_FILE = "saved_config.json"
+CONFIG_FILE = "cluster-config.json"
 def load_config():
     """Load saved config from disk, or return None if it doesn't exist."""
     if os.path.exists(CONFIG_FILE):
