@@ -320,11 +320,11 @@ def GET_VALID_SUBNET():
 def main():
     print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
-    standby_ips = []  # ✅ Make sure standby_ips is always defined
+    standby_ips = []  #  Make sure standby_ips is always defined
     config = load_config()
 
     if not config:
-        print("💡 First run detected: please enter the following details:")
+        print(" First run detected: please enter the following details:")
 
         # Collect inputs
         vault_password_file = GET_VAULT_PASSWORD_FILE()
@@ -345,7 +345,7 @@ def main():
                            [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}, {'IP': pgpool_ip}])
         print()
 
-        standby_ips = [standby1_ip, standby2_ip]  # ✅ Assign list here
+        standby_ips = [standby1_ip, standby2_ip]  #  Assign list here
 
         config = {
             "vault_password_file": vault_password_file,
@@ -356,14 +356,14 @@ def main():
             "delegate_ip": delegate_ip
         }
         save_config(config)
-        print("\n✅ Configuration saved to", CONFIG_FILE, "\n")
+        print("\n Configuration saved to", CONFIG_FILE, "\n")
     else:
-        print("🔁 Loaded configuration from", CONFIG_FILE)
+        print(" Loaded configuration from", CONFIG_FILE)
         print(json.dumps(config, indent=4), "\n")
         vault_password_file = config["vault_password_file"]
         cluster_subnet = config["cluster_subnet"]
         primary_ip = config["primary_ip"]
-        standby_ips = config["standby_ips"]  # ✅ Still defined properly
+        standby_ips = config["standby_ips"]  # Still defined properly
         pgpool_ip = config["pgpool_ip"]
         delegate_ip = config["delegate_ip"]
 
@@ -373,18 +373,18 @@ def main():
     PG_PORT = GET_POSTGRESQL_PORT()
     INITDB_PATH = GET_DATA_DIRECTORY_PATH()
 
-    # ✅ Build standby server structures
+    # Build standby server structures
     STANDBY_SERVERS = []
     for ip in standby_ips:
         REPLICATION_SLOT = "slot_" + ip.replace(".", "_")
         STANDBY_SERVERS.append({"IP": ip, "REPLICATION_SLOT": REPLICATION_SLOT})
 
-    # ✅ Generate necessary files
+    # Generate necessary files
     GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH,
                       cluster_subnet, STANDBY_SERVERS, pgpool_ip, delegate_ip)
     GENERATE_INVENTORY_FILE(primary_ip, STANDBY_SERVERS)
 
-    # ✅ Run the playbooks
+    # Run the playbooks
     EXECUTE_PLAYBOOKS(vault_password_file)
 
 if __name__ == "__main__":
