@@ -24,7 +24,7 @@ class DualLogger:
         self.terminal.flush()
         self.log.flush()
 
-sys.stdout = sys.stderr = DualLogger("project_terminal.log")
+sys.stdout = sys.stderr = DualLogger("pg_cirrus-logs.log")
 
 CONFIG_FILE = "saved_config.json"
 def load_config():
