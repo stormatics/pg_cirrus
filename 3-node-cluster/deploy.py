@@ -324,8 +324,6 @@ def main():
     config = load_config()
 
     if not config:
-        print(" First run detected: please enter the following details:")
-
         # Collect inputs
         vault_password_file = GET_VAULT_PASSWORD_FILE()
         print()
