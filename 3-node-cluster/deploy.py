@@ -321,7 +321,7 @@ def main():
     print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
 
     standby_ips = []  #  Make sure standby_ips is always defined
-    config = load_config()
+    config = LOAD_CONFIG()
 
     if not config:
         # Collect inputs
