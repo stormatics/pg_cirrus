@@ -335,10 +335,10 @@ def main():
         standby2_ip = GET_VALID_IP("Standby 2 IP address: ", cluster_subnet,
                                    [{'IP': primary_ip}, {'IP': standby1_ip}])
         print()
-        pgpool_ip = GET_VALID_IP("IP address of this node to setup pgpool: ", cluster_subnet,
+        pgpool_ip = GET_VALID_IP("IP address of pg_cirrus node : ", cluster_subnet,
                                  [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}])
         print()
-        delegate_ip = GET_VALID_IP("Enter Delegate IP for Pgpool VIP: ", cluster_subnet,
+        delegate_ip = GET_VALID_IP("Delegate IP for Pgpool VIP: ", cluster_subnet,
                            [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}, {'IP': pgpool_ip}])
         print()
 
