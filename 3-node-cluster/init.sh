@@ -38,7 +38,7 @@ install_packages() {
 }
 
 # Set the postgres password
-POSTGRES_PASSWORD="postgres"
+POSTGRES_PASSWORD="*****"
 
 # Update package manager cache and install packages
 install_packages
