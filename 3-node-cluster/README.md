@@ -6,11 +6,8 @@ Download init.sh file from pg_cirrus repository and execute it on all the nodes 
 Open the init.sh file and search for:
 - POSTGRES_PASSWORD="<postgres_password>"
 
- Replace the password value with your OS user's postgres password and then run this file by following command:
+ Replace the password value with your OS user's postgres password, and then run this file by following the command:
 - ./init.sh
-  
-
-
 
 # Setup passwordless SSH access from pg_cirrus node to other nodes 
 
@@ -20,7 +17,7 @@ Switch to the Postgres user on all the nodes inside the cluster
 Copy ~/.ssh/id_rsa.pub file content from pg_cirrus node and run the following command on primary, standby1 and standby2 nodes
 - mkdir -p ~/.ssh && echo '<$PG_CIRRUS_NODE_ID_RSA.PUB>' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 
-Finally test your SSH connection by connecting to each node from pg_cirrus node
+Finally, test your SSH connection by connecting to each node from the pg_cirrus node
 
 **NOTE**
 - On AWS/EC2, update the inbound rule for the primary, standby1 and standby2 node to allow All ICMP - IPv4 traffic from the pg_cirrus node.
@@ -44,7 +41,7 @@ Now, test your SSH connection by attempting to connect to each node from the oth
 
 # Clone pg_cirrus on pg_cirrus node
 
-Go to $HOME of postgres user
+Go to $HOME of the postgres user
 - cd $HOME
 
 Clone pg_cirrus
@@ -61,8 +58,8 @@ You will be prompted to enter the vault password.
 After providing the password, the vault file will open.
 Add the following lines to the vault.yml file, update the password as required, and then save the file.
 
-- PSQL_SERVER_PASSWORD: <your_psql_server_password>
-- REPUSER_PASSWORD: <your_replication_user_password>
+- PSQL_SERVER_PASSWORD: <psql_server_password>
+- REPUSER_PASSWORD: <replication_user_password>
 - WATCHDOG_AUTHENTICATION_KEY: <watchdog_communication_password>
 
 # Create a file to store the vault password
