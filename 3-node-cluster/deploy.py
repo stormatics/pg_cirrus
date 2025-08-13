@@ -2,6 +2,7 @@
 # This is the main python file to execute pg_cirrus.
 
 # Importing required python libraries.
+import json
 import subprocess
 import os
 import getpass
@@ -10,14 +11,66 @@ import pwd
 import ipaddress
 import sys
 
+class DualLogger:
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a", buffering=1)  # Line-buffered
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+sys.stdout = sys.stderr = DualLogger("cluster-logs.log")
+
+CONFIG_FILE = "cluster-config.json"
+def LOAD_CONFIG():
+    """Load saved config from disk, or return None if it doesn't exist."""
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    return None
+
+def SAVE_CONFIG(config):
+    """Save config dictionary to disk."""
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f, indent=4)
+
 # Function to execute setup-pgdg-repo.yml playbook on localhost.
 def EXECUTE_PGDG_PLAYBOOK():
-    subprocess.run(['ansible-playbook', 'ansible/playbooks/setup-pgdg-repo.yml'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        process = subprocess.Popen(
+            ['ansible-playbook', 'ansible/playbooks/setup-pgdg-repo.yml'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
+    except subprocess.CalledProcessError:
+        print("Error: Failed to execute setup-pgdg-repo.yml playbook.")
 
 # Function to execute setup-primary.yml playbook on primary server.
 def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
+        process = subprocess.Popen(
+            ['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-primary.yml", "--vault-password-file=" + VAULT_PASSWORD_FILE],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
     except subprocess.CalledProcessError as ERROR:
         print("Error: Failed to execute setup-primary.yml playbook.")
         raise ERROR
@@ -25,18 +78,38 @@ def EXECUTE_PRIMARY_PLAYBOOK(VAULT_PASSWORD_FILE):
 # Function to execute setup-standby.yml playbook on standby servers.
 def EXECUTE_STANDBY_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
-    except subprocess.CalledProcessError as ERROR:
+        process = subprocess.Popen(
+            ['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-standby.yml", "--vault-password-file=" + VAULT_PASSWORD_FILE],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
+    except subprocess.CalledProcessError:
         print("Error: Failed to execute setup-standby.yml playbook.")
-        raise ERROR
+        raise
 
 # Function to execute setup-pgpool.yml playbook on localhost.
 def EXECUTE_PGPOOL_PLAYBOOK(VAULT_PASSWORD_FILE):
     try:
-        subprocess.run(['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file="+ VAULT_PASSWORD_FILE], check=True)
-    except subprocess.CalledProcessError as ERROR:
+        process = subprocess.Popen(
+            ['ansible-playbook', "-i", "inventory", "ansible/playbooks/setup-pgpool.yml", "--vault-password-file=" + VAULT_PASSWORD_FILE],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
+    except subprocess.CalledProcessError:
         print("Error: Failed to execute setup-pgpool.yml playbook.")
-        raise ERROR
+        raise
 
 # Function to generate inventory file at runtime.
 def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
@@ -49,7 +122,7 @@ def GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS):
             file.write("STANDBY" + str(i) + " ansible_host=" + SERVER['IP'] + " ansible_connection=ssh ansible_user=postgres\n")
 
 # Function to generate variable file at runtime.
-def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP):
+def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP, DELEGATE_IP):
     print("Generating conf.yml ...")
     with open('conf.yml', 'w') as file:
         file.write('PG_PORT: ' + PG_PORT + '\n')
@@ -57,6 +130,7 @@ def GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_
         file.write('PGPOOL_IP: ' + PGPOOL_IP + '\n')
         file.write('INITDB_PATH: ' + INITDB_PATH + '\n')
         file.write('CLUSTER_SUBNET: '+ CLUSTER_SUBNET +'\n')
+        file.write('DELEGATE_IP: ' + DELEGATE_IP + '\n')
         file.write('STANDBY_SERVERS:\n')
         for i, SERVER in enumerate(STANDBY_SERVERS, start=1):
             file.write('  - NAME: STANDBY' + str(i) + '\n')
@@ -171,7 +245,6 @@ def GET_VAULT_PASSWORD_FILE():
                 print(f"File '{VAULT_PASSWORD_FILE}' does not have the correct permissions (0600).")
                 exit()
             else:
-                print("All checks for VAULT_PASSWORD_FILE were passed")
                 return VAULT_PASSWORD_FILE.strip()
 
 # Function to execute all playbooks.
@@ -244,42 +317,73 @@ def GET_VALID_SUBNET():
 
 # Main function to execute pg_cirrus.
 def main():
-  print("Welcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n\n")
+    print("\nWelcome to pg_cirrus - Hassle-free PostgreSQL Cluster Setup\n")
 
-  VAULT_PASSWORD_FILE = GET_VAULT_PASSWORD_FILE()
-  print("\n")
+    standby_ips = []  #  Make sure standby_ips is always defined
+    config = LOAD_CONFIG()
 
-  print("Getting latest PostgreSQL stable version ...")
-  PG_VERSION = GET_POSTGRESQL_VERSION()
+    if not config:
+        # Collect inputs
+        vault_password_file = GET_VAULT_PASSWORD_FILE()
+        print()
+        cluster_subnet = GET_VALID_SUBNET()
+        print()
+        primary_ip = GET_VALID_IP("Primary PostgreSQL Server IP address: ", cluster_subnet)
+        print()
+        standby1_ip = GET_VALID_IP("Standby 1 IP address: ", cluster_subnet, [{'IP': primary_ip}])
+        print()
+        standby2_ip = GET_VALID_IP("Standby 2 IP address: ", cluster_subnet,
+                                   [{'IP': primary_ip}, {'IP': standby1_ip}])
+        print()
+        pgpool_ip = GET_VALID_IP("IP address of pg_cirrus node : ", cluster_subnet,
+                                 [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}])
+        print()
+        delegate_ip = GET_VALID_IP("Delegate IP for Pgpool VIP: ", cluster_subnet,
+                           [{'IP': primary_ip}, {'IP': standby1_ip}, {'IP': standby2_ip}, {'IP': pgpool_ip}])
+        print()
 
-  print("\n")
-  PG_PORT = GET_POSTGRESQL_PORT()
+        standby_ips = [standby1_ip, standby2_ip]  #  Assign list here
 
-  print("\n")
-  INITDB_PATH = GET_DATA_DIRECTORY_PATH()
+        config = {
+            "vault_password_file": vault_password_file,
+            "cluster_subnet": cluster_subnet,
+            "primary_ip": primary_ip,
+            "standby_ips": standby_ips,
+            "pgpool_ip": pgpool_ip,
+            "delegate_ip": delegate_ip
+        }
+        SAVE_CONFIG(config)
+        print("Configuration saved to", CONFIG_FILE, "\n")
+    else:
+        print(" Loaded configuration from", CONFIG_FILE)
+        print(json.dumps(config, indent=4), "\n")
+        vault_password_file = config["vault_password_file"]
+        cluster_subnet = config["cluster_subnet"]
+        primary_ip = config["primary_ip"]
+        standby_ips = config["standby_ips"]  # Still defined properly
+        pgpool_ip = config["pgpool_ip"]
+        delegate_ip = config["delegate_ip"]
 
-  print("\n")
-  CLUSTER_SUBNET = GET_VALID_SUBNET()
 
-  print("\n")
-  PRIMARY_IP = GET_VALID_IP("Primary PostgreSQL Server IP address: ", CLUSTER_SUBNET)
+    # Gather remaining required values
+    PG_VERSION = GET_POSTGRESQL_VERSION()
+    PG_PORT = GET_POSTGRESQL_PORT()
+    INITDB_PATH = GET_DATA_DIRECTORY_PATH()
 
-  print("\n")
-  STANDBY_COUNT = 2
-  STANDBY_SERVERS = []
-  for i in range(1, STANDBY_COUNT + 1):
-    STANDBY_IP = GET_VALID_IP("Standby " + str(i) + " IP address: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
-    REPLICATION_SLOT = STANDBY_IP.replace(".", "_")
-    STANDBY_SERVERS.append({'IP': STANDBY_IP, 'REPLICATION_SLOT': "slot_" + REPLICATION_SLOT})
+    # Build standby server structures
+    STANDBY_SERVERS = []
+    for ip in standby_ips:
+        REPLICATION_SLOT = "slot_" + ip.replace(".", "_")
+        STANDBY_SERVERS.append({"IP": ip, "REPLICATION_SLOT": REPLICATION_SLOT})
 
-  print("\n")
-  PGPOOL_IP = GET_VALID_IP("IP address of this node to setup pgpool: ", CLUSTER_SUBNET, [{'IP': PRIMARY_IP}] + STANDBY_SERVERS)
+    # Generate necessary files
+    GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH,
+                      cluster_subnet, STANDBY_SERVERS, pgpool_ip, delegate_ip)
+    GENERATE_INVENTORY_FILE(primary_ip, STANDBY_SERVERS)
 
-  GENERATE_VAR_FILE(PG_PORT, PG_VERSION, INITDB_PATH, CLUSTER_SUBNET, STANDBY_SERVERS, PGPOOL_IP)
-  GENERATE_INVENTORY_FILE(PRIMARY_IP, STANDBY_SERVERS)
-
-  EXECUTE_PLAYBOOKS(VAULT_PASSWORD_FILE)
+    # Run the playbooks
+    EXECUTE_PLAYBOOKS(vault_password_file)
 
 if __name__ == "__main__":
-  main()
+    main()
 

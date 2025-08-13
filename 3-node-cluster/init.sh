@@ -4,18 +4,40 @@
 # This file is used to install pre requirements. Run this file on all the nodes in the cluster
 
 # Function to detect package manager and install required packages
-install_packages() {
+INSTALL_PACKAGES() {
     if [ -f /etc/redhat-release ]; then
         # Red Hat-based systems (RHEL, CentOS, etc.)
         echo "Detected Red Hat-based system. Installing packages..."
-	sudo yum update -y
-	sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
-        sudo yum install -y openssh-server net-tools python3 acl ansible git vim
-    elif [ -f /etc/debian_version ]; then
+	    sudo dnf update -y
+	    sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
+        sudo dnf install -y openssh-server net-tools python3 acl ansible git vim
+    
+	    sudo systemctl enable sshd
+        sudo systemctl start sshd
+
+        # Create directory for RPM files
+        RPM_DIR="/home/postgres/stormatics/pg_cirrus/RPM"
+		echo "Creating directory for RPM packages at $RPM_DIR..."
+        sudo mkdir "$RPM_DIR"
+		sudo chmod 755 "$RPM_DIR"
+		cd "$RPM_DIR" || { echo "Failed to change directory to $RPM_DIR"; exit 1; }
+        # Download and install libmemcached-awesome
+        echo "Downloading libmemcached-awesome RPM..."
+        curl -OL https://repo.almalinux.org/almalinux/9/CRB/x86_64/os/Packages/libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
+        echo "Installing libmemcached-awesome..."
+        sudo rpm -ivh libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
+
+   elif [ -f /etc/debian_version ]; then
         # Debian-based systems (Ubuntu, Debian, etc.)
         echo "Detected Debian-based system. Installing packages..."
         sudo apt-get update -y
-        sudo apt-get install -y openssh-server net-tools python3 acl ansible git
+        sudo apt-get install -y openssh-server net-tools python3 acl ansible git \
+            curl sudo vim iputils-ping gnupg
+
+        # Ensure SSH service can run
+        sudo mkdir -p /var/run/sshd
+		sudo systemctl enable ssh
+        sudo systemctl start ssh
     else
         echo "Unsupported OS. Exiting."
         exit 1
@@ -23,10 +45,10 @@ install_packages() {
 }
 
 # Set the postgres password
-POSTGRES_PASSWORD="postgres"
+POSTGRES_PASSWORD="<postgres_password>"
 
 # Update package manager cache and install packages
-install_packages
+INSTALL_PACKAGES
 
 # Ensure postgres user is created with default password
 echo "Ensuring postgres user is created..."
