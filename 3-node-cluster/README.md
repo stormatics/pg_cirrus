@@ -1,6 +1,6 @@
 # Configure pg_cirrus, Primary, Standby1 and Standby2 Nodes
-Download init.sh file from pg_cirrus repository and execute it on all the nodes inside the cluster
-- curl -OL https://raw.githubusercontent.com/mahatariq11/pg_cirrus/refs/heads/dev-improving-codebase/3-node-cluster/init.sh
+Download init.sh file from the pg_cirrus repository and execute it on all the nodes inside the cluster
+- curl -OL https://raw.githubusercontent.com/stormatics/pg_cirrus/main/3-node-cluster/init.sh
 - chmod +x init.sh
 
 Open the init.sh file and search for:
@@ -45,7 +45,7 @@ Go to $HOME of the postgres user
 - cd $HOME
 
 Clone pg_cirrus
-- git clone https://github.com/mahatariq11/pg_cirrus.git
+- git clone https://github.com/stormatics/pg_cirrus.git
 - cd pg_cirrus/3-node-cluster
 
 
