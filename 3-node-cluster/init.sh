@@ -15,18 +15,6 @@ INSTALL_PACKAGES() {
 	    sudo systemctl enable sshd
         sudo systemctl start sshd
 
-        # Create directory for RPM files
-        RPM_DIR="/home/postgres/stormatics/pg_cirrus/RPM"
-		echo "Creating directory for RPM packages at $RPM_DIR..."
-        sudo mkdir "$RPM_DIR"
-		sudo chmod 755 "$RPM_DIR"
-		cd "$RPM_DIR" || { echo "Failed to change directory to $RPM_DIR"; exit 1; }
-        # Download and install libmemcached-awesome
-        echo "Downloading libmemcached-awesome RPM..."
-        curl -OL https://repo.almalinux.org/almalinux/9/CRB/x86_64/os/Packages/libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
-        echo "Installing libmemcached-awesome..."
-        sudo rpm -ivh libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
-
    elif [ -f /etc/debian_version ]; then
         # Debian-based systems (Ubuntu, Debian, etc.)
         echo "Detected Debian-based system. Installing packages..."
@@ -83,5 +71,19 @@ echo "Setting correct permissions on SSH keys..."
 sudo chown postgres:postgres /home/postgres/.ssh/id_rsa
 sudo chmod 600 /home/postgres/.ssh/id_rsa
 
-echo "Pre-requisites installation completed."
+if [ -f /etc/redhat-release ]; then
+    RPM_DIR="/home/postgres/stormatics/pg_cirrus/RPM"
+    echo "Creating directory for RPM packages at $RPM_DIR..."
+    sudo mkdir -p "$RPM_DIR"
+    sudo chown -R postgres:postgres /home/postgres/stormatics
+    sudo chmod 755 "$RPM_DIR"
+    sudo -u postgres bash <<EOF
+		cd "$RPM_DIR" || { echo "Failed to change directory to $RPM_DIR"; exit 1; }
+		echo "Downloading libmemcached-awesome RPM..."
+		curl -OL https://repo.almalinux.org/almalinux/9/CRB/x86_64/os/Packages/libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
+		echo "Installing libmemcached-awesome..."
+		sudo rpm -ivh libmemcached-awesome-1.1.0-12.el9.x86_64.rpm
+	EOF
+fi
 
+echo "Pre-requisites installation completed."
